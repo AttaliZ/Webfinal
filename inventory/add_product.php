@@ -2,22 +2,41 @@
 include('db_connection.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $account_id = mysqli_real_escape_string($conn, $_POST['account_id']);
-    $game_id = mysqli_real_escape_string($conn, $_POST['game_id']);
-    $user_id = mysqli_real_escape_string($conn, $_POST['user_id']);
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
-    $details = mysqli_real_escape_string($conn, $_POST['details']);
-    $price = mysqli_real_escape_string($conn, $_POST['price']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
+    $gameName = mysqli_real_escape_string($conn, $_POST['gameName']);
+    $category = mysqli_real_escape_string($conn, $_POST['category']);
+    $releaseDate = mysqli_real_escape_string($conn, $_POST['releaseDate']);
+    $score = mysqli_real_escape_string($conn, $_POST['score']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $developer = mysqli_real_escape_string($conn, $_POST['developer']);
+    $platform = mysqli_real_escape_string($conn, $_POST['platform']);
 
-    $sql = "INSERT INTO Accounts (account_id, game_id, user_id, username, password, details, price, status, created_at)
-            VALUES ('$account_id', '$game_id', '$user_id', '$username', '$password', '$details', '$price', '$status', NOW())";
+    // จัดการการอัปโหลดไฟล์
+    $targetDir = "uploads/"; // โฟลเดอร์ที่เก็บไฟล์
+    $defaultFileName = uniqid() . '_' . basename($_FILES["gameImage"]["name"]); // สร้างชื่อไฟล์ไม่ซ้ำ
+    $targetFile = $targetDir . $defaultFileName;
+    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    $allowedTypes = array("jpg", "jpeg", "png", "gif");
 
-    if (mysqli_query($conn, $sql)) {
-        echo "<p class='success-msg'>Product added successfully!</p>";
+    // ตรวจสอบประเภทไฟล์
+    if (!in_array($imageFileType, $allowedTypes)) {
+        echo "<p class='error-msg'>Error: Only JPG, JPEG, PNG, and GIF files are allowed.</p>";
+        exit;
+    }
+
+    // อัปโหลดไฟล์
+    if (move_uploaded_file($_FILES["gameImage"]["tmp_name"], $targetFile)) {
+        $sql = "INSERT INTO games (GameName, Category, ReleaseDate, Score, Description, Developer, Platform, GameImage, LastUpdate)
+                VALUES ('$gameName', '$category', '$releaseDate', '$score', '$description', '$developer', '$platform', '$targetFile', NOW())";
+
+        if (mysqli_query($conn, $sql)) {
+            echo "<p class='success-msg'>Game added successfully!</p>";
+        } else {
+            echo "<p class='error-msg'>Error: " . mysqli_error($conn) . "</p>";
+            // ลบไฟล์ที่อัปโหลดแล้วหากเกิดข้อผิดพลาด
+            unlink($targetFile);
+        }
     } else {
-        echo "<p class='error-msg'>Error: " . mysqli_error($conn) . "</p>";
+        echo "<p class='error-msg'>Error: Failed to upload image.</p>";
     }
 }
 
@@ -826,12 +845,6 @@ mysqli_close($conn);
                     <span class="lang-th" style="display: none;">แสดงสินค้า</span>
                 </a>
             </li>
-            <li>
-                <a href="swapper.php">
-                    <span class="lang-en">API-DB</span>
-                    <span class="lang-th" style="display: none;">การเชื่อมต่อ</span>
-                </a>
-            </li>
         </ul>
         <div class="nav-right">
             <a href="add_product.php" class="add-btn active">
@@ -868,85 +881,78 @@ mysqli_close($conn);
         </div>
 
         <div class="form-body">
-            <form method="POST" action="" class="form-grid">
-                <div class="input-group">
-                    <input type="text" id="account_id" name="account_id" placeholder=" " required>
-                    <label for="account_id">
-                        <span class="lang-en">Account ID</span>
-                        <span class="lang-th" style="display: none;">รหัสบัญชี</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <input type="text" id="game_id" name="game_id" placeholder=" " required>
-                    <label for="game_id">
-                        <span class="lang-en">Game ID</span>
-                        <span class="lang-th" style="display: none;">รหัสเกม</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <input type="text" id="user_id" name="user_id" placeholder=" " required>
-                    <label for="user_id">
-                        <span class="lang-en">User ID</span>
-                        <span class="lang-th" style="display: none;">รหัสผู้ใช้</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <input type="text" id="username" name="username" placeholder=" " required>
-                    <label for="username">
-                        <span class="lang-en">Username</span>
-                        <span class="lang-th" style="display: none;">ชื่อผู้ใช้</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <input type="password" id="password" name="password" placeholder=" " required>
-                    <label for="password">
-                        <span class="lang-en">Password</span>
-                        <span class="lang-th" style="display: none;">รหัสผ่าน</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <input type="text" id="details" name="details" placeholder=" " required>
-                    <label for="details">
-                        <span class="lang-en">Product Details</span>
-                        <span class="lang-th" style="display: none;">รายละเอียดสินค้า</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <input type="number" id="price" name="price" step="0.01" placeholder=" " required>
-                    <label for="price">
-                        <span class="lang-en">Price</span>
-                        <span class="lang-th" style="display: none;">ราคา</span>
-                    </label>
-                </div>
-
-                <div class="input-group">
-                    <select id="status" name="status" required>
-                        <option value="" disabled selected></option>
-                        <option value="available" class="lang-en">Available</option>
-                        <option value="available" class="lang-th" style="display: none;">พร้อมขาย</option>
-                        <option value="sold" class="lang-en">Sold</option>
-                        <option value="sold" class="lang-th" style="display: none;">ขายแล้ว</option>
-                    </select>
-                    <label for="status">
-                        <span class="lang-en">Status</span>
-                        <span class="lang-th" style="display: none;">สถานะ</span>
-                    </label>
-                </div>
-
-                <button type="submit" class="submit-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                    <span class="lang-en">Add Product to Inventory</span>
-                    <span class="lang-th" style="display: none;">เพิ่มสินค้าเข้าคลัง</span>
-                </button>
-            </form>
+    <form method="POST" action="" class="form-grid" enctype="multipart/form-data">
+        <div class="input-group">
+            <input type="text" id="gameName" name="gameName" placeholder=" " required>
+            <label for="gameName">
+                <span class="lang-en">Game Name</span>
+                <span class="lang-th" style="display: none;">ชื่อเกม</span>
+            </label>
         </div>
-    </div>
+
+        <div class="input-group">
+            <input type="text" id="category" name="category" placeholder=" " required>
+            <label for="category">
+                <span class="lang-en">Category</span>
+                <span class="lang-th" style="display: none;">หมวดหมู่</span>
+            </label>
+        </div>
+
+        <div class="input-group">
+            <input type="date" id="releaseDate" name="releaseDate" placeholder=" " required>
+            <label for="releaseDate">
+                <span class="lang-en">Release Date</span>
+                <span class="lang-th" style="display: none;">วันที่วางจำหน่าย</span>
+            </label>
+        </div>
+
+        <div class="input-group">
+            <input type="number" id="score" name="score" step="0.1" min="0" max="10" placeholder=" " required>
+            <label for="score">
+                <span class="lang-en">Score (0-10)</span>
+                <span class="lang-th" style="display: none;">คะแนน (0-10)</span>
+            </label>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="description" name="description" placeholder=" " required>
+            <label for="description">
+                <span class="lang-en">Description</span>
+                <span class="lang-th" style="display: none;">คำอธิบาย</span>
+            </label>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="developer" name="developer" placeholder=" " required>
+            <label for="developer">
+                <span class="lang-en">Developer</span>
+                <span class="lang-th" style="display: none;">ผู้พัฒนา</span>
+            </label>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="platform" name="platform" placeholder=" " required>
+            <label for="platform">
+                <span class="lang-en">Platform</span>
+                <span class="lang-th" style="display: none;">แพลตฟอร์ม</span>
+            </label>
+        </div>
+
+        <div class="input-group">
+            <input type="file" id="gameImage" name="gameImage" accept="image/*" required>
+            <label for="gameImage">
+                <span class="lang-en">Upload Game Image</span>
+                <span class="lang-th" style="display: none;">อัปโหลดรูปภาพเกม</span>
+            </label>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span class="lang-en">Add Game to Inventory</span>
+            <span class="lang-th" style="display: none;">เพิ่มเกมเข้าคลัง</span>
+        </button>
+    </form>
+</div>
 
     <script>
         // Language Toggle Functionality
