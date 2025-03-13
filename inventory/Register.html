@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | PLAYERHAVEN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #7209b7;
+            --success-color: #06d6a0;
+            --danger-color: #ef476f;
+            --warning-color: #ffd166;
+            --info-color: #118ab2;
+            --dark-color: #073b4c;
+            --light-color: #f8f9fa;
+            --bs-font-sans-serif: 'Poppins', sans-serif;
+            --bs-font-thai: 'Prompt', sans-serif;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--bs-font-sans-serif);
+            background: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.thai {
+            font-family: var(--bs-font-thai);
+        }
+
+        /* ======= Animated Background ======= */
+        .animated-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(-45deg, #4361ee, #3a0ca3, #4cc9f0, #4895ef);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.8;
+        }
+
+        .glass-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: -1;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* ======= Floating Elements ======= */
+        .floating-shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            animation: float 8s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            left: 20%;
+            animation-delay: 1s;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .shape:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            right: 15%;
+            animation-delay: 2s;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .shape:nth-child(4) {
+            width: 60px;
+            height: 60px;
+            bottom: 15%;
+            right: 10%;
+            animation-delay: 3s;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .shape:nth-child(5) {
+            width: 150px;
+            height: 150px;
+            bottom: 30%;
+            left: 5%;
+            animation-delay: 4s;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+
+        /* ======= Register Container ======= */
+        .register-container {
+            max-width: 550px;
+            width: 90%;
+            margin: 50px auto;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3),
+                        0 0 30px rgba(67, 97, 238, 0.3),
+                        0 0 100px rgba(114, 9, 183, 0.2);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            animation: fadeIn 1s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Neon effect border */
+        .register-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                #ff3399, #4361ee, #7209b7, #3a0ca3, 
+                #4cc9f0, #4361ee, #ff3399);
+            background-size: 400%;
+            border-radius: 32px;
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0.7;
+            animation: glowingBorder 20s linear infinite;
+        }
+
+        @keyframes glowingBorder {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        .register-header-content {
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .register-header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.2;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(76, 201, 240, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 60%, rgba(114, 9, 183, 0.3) 0%, transparent 50%);
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4361ee, #7209b7);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1.2rem;
+            transform: rotate(10deg);
+            overflow: hidden;
+        }
+
+        .logo-container img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        .register-title {
+            font-size: 2.3rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            background: linear-gradient(to right, #4cc9f0, #f72585);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .register-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.3rem;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .register-form-container {
+            padding: 2rem;
+            color: white;
+            position: relative;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* Scrollbar styling */
+        .register-form-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .register-form-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .register-form-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .register-form-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Language Toggle Button */
+        .lang-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #7209b7, #3a0ca3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .lang-toggle:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+        }
+
+        .lang-toggle i {
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Password related styling */
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 2;
+            transition: color 0.2s;
+        }
+
+        .password-toggle:hover {
+            color: white;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .strength-meter {
+            height: 100%;
+            width: 0;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .password-feedback {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Phone input styles */
+        .phone-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .country-code {
+            width: 90px;
+            flex-shrink: 0;
+            background-position: right 10px center !important;
+        }
+
+        .phone-number {
+            flex-grow: 1;
+        }
+
+        /* Select styling */
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 30px;
+        }
+
+        /* Validation messages */
+        .validation-message {
+            color: var(--danger-color);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .validation-message.visible {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Terms checkbox */
+        .terms-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .terms-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-top: 3px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .terms-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* Button styling */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .register-btn {
+            background: linear-gradient(135deg, var(--success-color), #03a87c);
+            color: white;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .login-link a {
+            color: #4cc9f0;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #f72585;
+            text-decoration: underline;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .register-btn:hover {
+            background: linear-gradient(135deg, #03a87c, var(--success-color));
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ======= Responsive Design ======= */
+        @media screen and (max-width: 768px) {
+            .register-container {
+                width: 95%;
+                margin: 20px auto;
+                max-height: 90vh;
+            }
+
+            .register-header-content {
+                padding: 1.5rem;
+            }
+
+            .register-title {
+                font-size: 1.8rem;
+            }
+
+            .register-form-container {
+                padding: 1.5rem;
+                max-height: 70vh;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* ======= Animations and Effects ======= */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background Elements -->
+    <div class="animated-bg"></div>
+    <div class="glass-overlay"></div>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Register Form Container -->
+    <div class="register-container">
+        <div class="register-header-content">
+            <div class="register-header-bg"></div>
+            <div class="logo-container pulse">
+                <img src="img/Logopage.jpg" alt="PlayerHaven Logo">
+            </div>
+            <h1 class="register-title">
+                <span class="lang-en">INVENTORY</span>
+                <span class="lang-th" style="display: none;">คลังสินค้า</span>
+            </h1>
+            <p class="register-subtitle">
+                <span class="lang-en">LOGIN FIRST</span>
+                <span class="lang-th" style="display: none;">กรุณาเข้าสู่ระบบ</span>
+            </h1>
+        </div>
+
+        <div class="register-form-container">
+            <!-- Language Toggle Button -->
+            <button class="lang-toggle" id="langToggle">
+                <i class="fas fa-globe"></i>
+                <span class="current-lang">EN</span>
+            </button>
+            
+            <p class="register-subtitle" style="text-align: center; margin-bottom: 1.5rem;">
+                <span class="lang-en">REGISTER ACCOUNT</span>
+                <span class="lang-th" style="display: none;">สมัครสมาชิก</span>
+            </p>
+            
+            <form action="register.php" method="POST" id="registerForm">
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <span class="lang-en">Username *</span>
+                        <span class="lang-th" style="display: none;">ชื่อผู้ใช้ *</span>
+                    </label>
+                    <input type="text" id="username" name="username" class="form-control" minlength="6" required>
+                    <div class="validation-message" id="usernameValidation">
+                        <span class="lang-en">Username must be at least 6 characters</span>
+                        <span class="lang-th" style="display: none;">ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 6 ตัวอักษร</span>
+                    </div>
+                </div>
+                
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <span class="lang-en">Password *</span>
+                        <span class="lang-th" style="display: none;">รหัสผ่าน *</span>
+                    </label>
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" class="form-control" minlength="8" required>
+                        <span class="password-toggle" onclick="togglePasswordVisibility()">
+                            <i id="toggleIcon" class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-meter" id="strengthMeter"></div>
+                    </div>
+                    <div class="password-feedback" id="passwordFeedback">
+                        <span class="lang-en">Password must be at least 8 characters</span>
+                        <span class="lang-th" style="display: none;">รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร</span>
+                    </div>
+                </div>
+                
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <span class="lang-en">Email *</span>
+                        <span class="lang-th" style="display: none;">อีเมล *</span>
+                    </label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                    <div class="validation-message" id="emailValidation">
+                        <span class="lang-en">Please enter a valid email address</span>
+                        <span class="lang-th" style="display: none;">กรุณาใส่อีเมลที่ถูกต้อง</span>
+                    </div>
+                </div>
+                
+                <!-- Phone Number -->
+                <div class="form-group">
+                    <label for="phone" class="form-label">
+                        <span class="lang-en">Phone Number *</span>
+                        <span class="lang-th" style="display: none;">เบอร์โทรศัพท์ *</span>
+                    </label>
+                    <div class="phone-input-container">
+                        <select id="countryCode" name="countryCode" class="form-control country-code">
+                            <option value="+66">+66</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                            <option value="+81">+81</option>
+                            <option value="+82">+82</option>
+                            <option value="+86">+86</option>
+                            <option value="+65">+65</option>
+                            <option value="+60">+60</option>
+                            <option value="+62">+62</option>
+                            <option value="+84">+84</option>
+                            <option value="+63">+63</option>
+                        </select>
+                        <input type="tel" id="phone" name="phone" class="form-control phone-number" required>
+                    </div>
+                    <div class="validation-message" id="phoneValidation">
+                        <span class="lang-en">Please enter a valid phone number</span>
+                        <span class="lang-th" style="display: none;">กรุณาใส่เบอร์โทรศัพท์ที่ถูกต้อง</span>
+                    </div>
+                </div>
+                
+                <!-- First Name -->
+                <div class="form-group">
+                    <label for="first_name" class="form-label">
+                        <span class="lang-en">First Name *</span>
+                        <span class="lang-th" style="display: none;">ชื่อจริง *</span>
+                    </label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" required>
+                </div>
+                
+                <!-- Last Name -->
+                <div class="form-group">
+                    <label for="last_name" class="form-label">
+                        <span class="lang-en">Last Name *</span>
+                        <span class="lang-th" style="display: none;">นามสกุล *</span>
+                    </label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" required>
+                </div>
+                
+                <!-- Terms -->
+                <div class="terms-container">
+                    <input type="checkbox" id="terms" name="terms" class="terms-checkbox" required>
+                    <label for="terms" class="terms-label">
+                        <span class="lang-en">I agree to the Terms and Conditions</span>
+                        <span class="lang-th" style="display: none;">ฉันยินยอมตามเงื่อนไขและนโยบาย</span>
+                    </label>
+                </div>
+                
+                <!-- Buttons -->
+                <div class="btn-group">
+                    <button type="submit" class="btn register-btn">
+                        <i class="fas fa-user-plus"></i> 
+                        <span class="lang-en">Register</span>
+                        <span class="lang-th" style="display: none;">สมัครสมาชิก</span>
+                    </button>
+                    <button type="reset" class="btn reset-btn">
+                        <i class="fas fa-sync-alt"></i> 
+                        <span class="lang-en">Reset</span>
+                        <span class="lang-th" style="display: none;">ล้างข้อมูล</span>
+                    </button>
+                </div>
+                
+                <!-- Login Link -->
+                <div class="login-link">
+                    <span class="lang-en">Already have an account?</span>
+                    <span class="lang-th" style="display: none;">มีบัญชีอยู่แล้ว?</span>
+                    <a href="Login.html">
+                        <span class="lang-en">Login</span>
+                        <span class="lang-th" style="display: none;">เข้าสู่ระบบ</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // ฟังก์ชันสลับการแสดงรหัสผ่าน
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // ฟังก์ชันตรวจสอบความแข็งแกร่งของรหัสผ่าน
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            const strengthMeter = document.getElementById('strengthMeter');
+            const feedback = document.getElementById('passwordFeedback');
+            
+            // ซ่อน feedback ภาษาอังกฤษ/ไทย ตามภาษาที่ใช้
+            const feedbackEn = feedback.querySelector('.lang-en');
+            const feedbackTh = feedback.querySelector('.lang-th');
+            const isEnglish = document.querySelector('.current-lang').textContent === 'EN';
+            
+            if (password.length === 0) {
+                strengthMeter.style.width = '0%';
+                strengthMeter.style.backgroundColor = '';
+                
+                // แสดงข้อความเริ่มต้น
+                feedbackEn.textContent = 'Password must be at least 8 characters';
+                feedbackTh.textContent = 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร';
+                feedback.style.color = 'rgba(255, 255, 255, 0.7)';
+                return;
+            }
+
+            // ตรวจสอบความยาว
+            if (password.length >= 8) {
+                strength += 1;
+            }
+
+            // ตรวจสอบตัวอักษรพิมพ์เล็ก
+            if (password.match(/[a-z]/)) {
+                strength += 1;
+            }
+
+            // ตรวจสอบตัวอักษรพิมพ์ใหญ่
+            if (password.match(/[A-Z]/)) {
+                strength += 1;
+            }
+
+            // ตรวจสอบตัวเลข
+            if (password.match(/[0-9]/)) {
+                strength += 1;
+            }
+
+            // ตรวจสอบอักขระพิเศษ
+            if (password.match(/[^a-zA-Z0-9]/)) {
+                strength += 1;
+            }
+
+            // อัปเดต UI ตามระดับความแข็งแกร่ง
+            switch (strength) {
+                case 0:
+                case 1:
+                    strengthMeter.style.width = '20%';
+                    strengthMeter.style.backgroundColor = '#ef476f'; // red
+                    
+                    feedbackEn.textContent = 'Very weak password';
+                    feedbackTh.textContent = 'รหัสผ่านอ่อนแอมาก';
+                    feedback.style.color = '#ef476f';
+                    break;
+                case 2:
+                    strengthMeter.style.width = '40%';
+                    strengthMeter.style.backgroundColor = '#ffd166'; // yellow
+                    
+                    feedbackEn.textContent = 'Weak password';
+                    feedbackTh.textContent = 'รหัสผ่านอ่อนแอ';
+                    feedback.style.color = '#ffd166';
+                    break;
+                case 3:
+                    strengthMeter.style.width = '60%';
+                    strengthMeter.style.backgroundColor = '#06d6a0'; // green
+                    
+                    feedbackEn.textContent = 'Moderate password';
+                    feedbackTh.textContent = 'รหัสผ่านปานกลาง';
+                    feedback.style.color = '#06d6a0';
+                    break;
+                case 4:
+                    strengthMeter.style.width = '80%';
+                    strengthMeter.style.backgroundColor = '#118ab2'; // blue
+                    
+                    feedbackEn.textContent = 'Strong password';
+                    feedbackTh.textContent = 'รหัสผ่านแข็งแรง';
+                    feedback.style.color = '#118ab2';
+                    break;
+                case 5:
+                    strengthMeter.style.width = '100%';
+                    strengthMeter.style.backgroundColor = '#4361ee'; // purple
+                    
+                    feedbackEn.textContent = 'Very strong password';
+                    feedbackTh.textContent = 'รหัสผ่านแข็งแรงมาก';
+                    feedback.style.color = '#4361ee';
+                    break;
+            }
+        }
+
+        // ฟังก์ชันตรวจสอบความถูกต้องของอีเมล
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // ฟังก์ชันตรวจสอบความถูกต้องของเบอร์โทรศัพท์
+        function validatePhone(phone) {
+            return /^\d{8,15}$/.test(phone.replace(/\s/g, ''));
+        }
+
+        // ฟังก์ชันสลับภาษา
+        function toggleLanguage() {
+            const currentLangEl = document.querySelector('.current-lang');
+            const isEnglish = currentLangEl.textContent === 'EN';
+            
+            // ซ่อน/แสดงข้อความตามภาษา
+            document.querySelectorAll('.lang-en').forEach(el => {
+                el.style.display = isEnglish ? 'none' : 'inline-block';
+            });
+            
+            document.querySelectorAll('.lang-th').forEach(el => {
+                el.style.display = isEnglish ? 'inline-block' : 'none';
+            });
+            
+            // อัปเดตข้อความในปุ่มสลับภาษา
+            currentLangEl.textContent = isEnglish ? 'TH' : 'EN';
+            
+            // เปลี่ยนฟอนต์ของหน้าเว็บ
+            document.body.classList.toggle('thai');
+            
+            // บันทึกการตั้งค่าภาษา
+            localStorage.setItem('language', isEnglish ? 'th' : 'en');
+        }
+
+        // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
+        document.addEventListener('DOMContentLoaded', function() {
+            // โหลดการตั้งค่าภาษา
+            const savedLanguage = localStorage.getItem('language');
+            if (savedLanguage === 'th') {
+                toggleLanguage();
+            }
+            
+            // เพิ่ม event listener ให้กับปุ่มสลับภาษา
+            document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+            
+            // รับอิลิเมนต์ฟอร์ม
+            const form = document.getElementById('registerForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const firstNameInput = document.getElementById('first_name');
+            const lastNameInput = document.getElementById('last_name');
+            
+            // ตรวจสอบความยาวของ username
+            usernameInput.addEventListener('input', function() {
+                const usernameValidation = document.getElementById('usernameValidation');
+                if (this.value.length > 0 && this.value.length < 6) {
+                    usernameValidation.classList.add('visible');
+                } else {
+                    usernameValidation.classList.remove('visible');
+                }
+            });
+            
+            // ตรวจสอบความแข็งแรงของรหัสผ่าน
+            passwordInput.addEventListener('input', function() {
+                checkPasswordStrength(this.value);
+            });
+            
+            // ตรวจสอบรูปแบบอีเมล
+            emailInput.addEventListener('input', function() {
+                const emailValidation = document.getElementById('emailValidation');
+                if (this.value && !validateEmail(this.value)) {
+                    emailValidation.classList.add('visible');
+                } else {
+                    emailValidation.classList.remove('visible');
+                }
+            });
+            
+            // ตรวจสอบรูปแบบเบอร์โทรศัพท์
+            phoneInput.addEventListener('input', function() {
+                const phoneValidation = document.getElementById('phoneValidation');
+                if (this.value && !validatePhone(this.value)) {
+                    phoneValidation.classList.add('visible');
+                } else {
+                    phoneValidation.classList.remove('visible');
+                }
+            });
+            
+            // ตรวจสอบก่อนส่งฟอร์ม
+            form.addEventListener('submit', function(e) {
+                let hasError = false;
+                
+                // รีเซ็ตการตรวจสอบทั้งหมด
+                document.querySelectorAll('.validation-message').forEach(msg => {
+                    msg.classList.remove('visible');
+                });
+                
+                // ตรวจสอบ username
+                if (usernameInput.value.length < 6) {
+                    document.getElementById('usernameValidation').classList.add('visible');
+                    hasError = true;
+                }
+                
+                // ตรวจสอบ password
+                if (passwordInput.value.length < 8) {
+                    hasError = true;
+                }
+                
+                // ตรวจสอบ email
+                if (!validateEmail(emailInput.value)) {
+                    document.getElementById('emailValidation').classList.add('visible');
+                    hasError = true;
+                }
+                
+                // ตรวจสอบ phone
+                if (!validatePhone(phoneInput.value)) {
+                    document.getElementById('phoneValidation').classList.add('visible');
+                    hasError = true;
+                }
+                
+                if (hasError) {
+                    e.preventDefault();
+                }
+            });
+            
+            // รีเซ็ตฟอร์ม
+            form.addEventListener('reset', function() {
+                setTimeout(() => {
+                    // รีเซ็ตข้อความตรวจสอบ
+                    document.querySelectorAll('.validation-message').forEach(msg => {
+                        msg.classList.remove('visible');
+                    });
+                    
+                    // รีเซ็ตตัวแสดงความแข็งแรงของรหัสผ่าน
+                    document.getElementById('strengthMeter').style.width = '0%';
+                    document.getElementById('strengthMeter').style.backgroundColor = '';
+                    
+                    // รีเซ็ตข้อความสถานะรหัสผ่าน
+                    const passwordFeedback = document.getElementById('passwordFeedback');
+                    const feedbackEn = passwordFeedback.querySelector('.lang-en');
+                    const feedbackTh = passwordFeedback.querySelector('.lang-th');
+                    
+                    feedbackEn.textContent = 'Password must be at least 8 characters';
+                    feedbackTh.textContent = 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร';
+                    passwordFeedback.style.color = 'rgba(255, 255, 255, 0.7)';
+                }, 10);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to PLAYERHAVEN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #7209b7;
+            --accent-color: #f72585;
+            --success-color: #06d6a0;
+            --danger-color: #ef476f;
+            --warning-color: #ffd166;
+            --info-color: #118ab2;
+            --dark-color: #073b4c;
+            --light-color: #f8f9fa;
+            --bs-font-sans-serif: 'Poppins', sans-serif;
+            --bs-font-thai: 'Prompt', sans-serif;
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--bs-font-sans-serif);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+        }
+
+        body.thai {
+            font-family: var(--bs-font-thai);
+        }
+
+        /* ======= Animated Background ======= */
+        .animated-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -2;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* Star field background */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transform: perspective(500px);
+            transform-style: preserve-3d;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: starAnimation linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes starAnimation {
+            0% {
+                transform: translateZ(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateZ(1000px);
+                opacity: 0;
+            }
+        }
+
+        /* Nebula effect */
+        .nebula {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.2;
+            background: 
+                radial-gradient(circle at 20% 35%, rgba(76, 201, 240, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 75% 70%, rgba(247, 37, 133, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(114, 9, 183, 0.2) 0%, transparent 70%);
+            animation: nebulaGlow 15s ease infinite alternate;
+        }
+
+        @keyframes nebulaGlow {
+            0% {
+                opacity: 0.2;
+                filter: hue-rotate(0deg);
+            }
+            50% {
+                opacity: 0.4;
+                filter: hue-rotate(30deg);
+            }
+            100% {
+                opacity: 0.3;
+                filter: hue-rotate(60deg);
+            }
+        }
+
+        /* Content container */
+        .container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            max-width: 800px;
+            padding: 0 20px;
+        }
+
+        /* Main title */
+        .main-title {
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            position: relative;
+            text-transform: uppercase;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            text-shadow:
+                0 0 5px rgba(67, 97, 238, 0.5),
+                0 0 15px rgba(67, 97, 238, 0.5),
+                0 0 30px rgba(67, 97, 238, 0.5);
+        }
+
+        @keyframes titleGlow {
+            from {
+                text-shadow:
+                    0 0 5px rgba(67, 97, 238, 0.5),
+                    0 0 15px rgba(67, 97, 238, 0.5),
+                    0 0 30px rgba(67, 97, 238, 0.5);
+            }
+            to {
+                text-shadow:
+                    0 0 10px rgba(67, 97, 238, 0.7),
+                    0 0 25px rgba(67, 97, 238, 0.7),
+                    0 0 50px rgba(67, 97, 238, 0.7);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Logo */
+        .logo-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 2rem;
+            position: relative;
+            animation: logoFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            animation: logoRotate 30s linear infinite;
+        }
+
+        @keyframes logoRotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .logo-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            filter: blur(20px);
+            background: radial-gradient(circle, rgba(76, 201, 240, 0.8) 0%, rgba(114, 9, 183, 0.3) 70%, transparent 100%);
+            animation: glowPulse 4s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes glowPulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Language toggle */
+        .lang-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #7209b7, #3a0ca3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px rgba(114, 9, 183, 0.5);
+            z-index: 10;
+        }
+
+        .lang-toggle:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 20px rgba(114, 9, 183, 0.7);
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+        }
+
+        .lang-toggle i {
+            font-size: 1rem;
+        }
+
+        /* Start Button with amazing effects */
+        .start-btn-container {
+            position: relative;
+            margin-top: 2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 1s forwards;
+        }
+
+        .start-btn {
+            position: relative;
+            display: inline-block;
+            padding: 1.2rem 3.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            overflow: hidden;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                var(--primary-color), 
+                var(--secondary-color), 
+                var(--accent-color), the
+                var(--secondary-color), 
+                var(--primary-color));
+            background-size: 400%;
+            border-radius: 30px;
+            z-index: -1;
+            animation: glowingBtn 20s linear infinite;
+        }
+
+        @keyframes glowingBtn {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+
+        .start-btn::after {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            left: 3px;
+            top: 3px;
+            width: calc(100% - 6px);
+            height: calc(100% - 6px);
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 27px;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            letter-spacing: 4px;
+            box-shadow: 0 0 30px rgba(247, 37, 133, 0.5);
+        }
+
+        .start-btn:hover::after {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .start-btn:active {
+            transform: translateY(-2px);
+        }
+
+        /* Button outer glow effect */
+        .btn-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            filter: blur(20px);
+            background: linear-gradient(45deg, 
+                rgba(67, 97, 238, 0.7), 
+                rgba(114, 9, 183, 0.7));
+            z-index: -2;
+            animation: btnGlowPulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes btnGlowPulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Button icon animation */
+        .start-btn-icon {
+            display: inline-block;
+            margin-left: 10px;
+            animation: iconBounce 1s ease infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 3rem;
+            }
+            
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .logo-container {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .start-btn {
+                padding: 1rem 2.5rem;
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .logo-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .start-btn {
+                padding: 0.8rem 2rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Elements -->
+    <div class="animated-bg">
+        <div class="stars" id="stars"></div>
+        <div class="nebula"></div>
+    </div>
+
+    <!-- Language Toggle Button -->
+    <button class="lang-toggle" id="langToggle">
+        <i class="fas fa-globe"></i>
+        <span class="current-lang">EN</span>
+    </button>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="logo-container">
+            <img src="uploads/67d29ce248d0e.jpg" alt="Uploaded Image">
+            <div class="logo-glow"></div>
+        </div>
+        
+        <h1 class="main-title">
+            <span class="lang-en">PLAYERHAVEN</span>
+            <span class="lang-th" style="display: none;">เพลเยอร์เฮเวน</span>
+        </h1>
+        
+        <p class="subtitle">
+            <span class="lang-en">YOUR ULTIMATE GAME ONLINE STORE</span>
+            <span class="lang-th" style="display: none;">ร้านค้าเกมออนไลน์ที่ดีที่สุดของคุณ</span>
+        </p>
+        
+        <div class="start-btn-container">
+            <div class="btn-glow"></div>
+            <a href="../Webfinal/inventory/Login.html" class="start-btn">
+                <span class="lang-en">BEGIN JOURNEY</span>
+                <span class="lang-th" style="display: none;">เริ่มการเดินทาง</span>
+                <span class="start-btn-icon">
+                    <i class="fas fa-chevron-right"></i>
+                </span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Create stars dynamically
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            
+            // เพิ่ม event listener ให้กับปุ่มสลับภาษา
+            document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+            
+            // โหลดการตั้งค่าภาษา
+            const savedLanguage = localStorage.getItem('language');
+            if (savedLanguage === 'th') {
+                toggleLanguage();
+            }
+        });
+
+        function createStars() {
+            const stars = document.getElementById('stars');
+            const count = 300;
+            
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random position
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const z = Math.random() * 1000;
+                
+                // Random size
+                const size = Math.random() * 2 + 1;
+                
+                // Random animation duration
+                const duration = Math.random() * 10 + 10;
+                
+                // Random delay
+                const delay = Math.random() * 10;
+                
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.animationDuration = `${duration}s`;
+                star.style.animationDelay = `${delay}s`;
+                
+                stars.appendChild(star);
+            }
+        }
+
+        // ฟังก์ชันสลับภาษา
+        function toggleLanguage() {
+            const currentLangEl = document.querySelector('.current-lang');
+            const isEnglish = currentLangEl.textContent === 'EN';
+            
+            // ซ่อน/แสดงข้อความตามภาษา
+            document.querySelectorAll('.lang-en').forEach(el => {
+                el.style.display = isEnglish ? 'none' : 'inline-block';
+            });
+            
+            document.querySelectorAll('.lang-th').forEach(el => {
+                el.style.display = isEnglish ? 'inline-block' : 'none';
+            });
+            
+            // อัปเดตข้อความในปุ่มสลับภาษา
+            currentLangEl.textContent = isEnglish ? 'TH' : 'EN';
+            
+            // เปลี่ยนฟอนต์ของหน้าเว็บ
+            document.body.classList.toggle('thai');
+            
+            // บันทึกการตั้งค่าภาษา
+            localStorage.setItem('language', isEnglish ? 'th' : 'en');
+        }
+    </script>
+</body>
+</html>
