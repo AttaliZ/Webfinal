@@ -34,13 +34,25 @@ if ($isLoggedIn) {
     $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
     $offset = ($currentPage - 1) * $itemsPerPage;
 
-    $totalQuery = "SELECT COUNT(*) as total FROM games";
+    // ตรวจสอบว่าตารางมีอยู่หรือไม่
+    $checkTableQuery = "SHOW TABLES LIKE 'FinalExam_Korkrit_Pip_Inventory'";
+    $checkTableResult = mysqli_query($conn, $checkTableQuery);
+
+    if ($checkTableResult->num_rows == 0) {
+        die("Error: Table 'FinalExam_Korkrit_Pip_Inventory' does not exist in the database.");
+    }
+
+    // Calculate total items
+    $totalQuery = "SELECT COUNT(*) as total FROM FinalExam_Korkrit_Pip_Inventory";
     $totalResult = mysqli_query($conn, $totalQuery);
     $totalRow = mysqli_fetch_assoc($totalResult);
     $totalItems = $totalRow['total'];
     $totalPages = ceil($totalItems / $itemsPerPage);
 
-    $query = "SELECT * FROM games ORDER BY LastUpdate DESC LIMIT $offset, $itemsPerPage";
+    // Fetch products
+    $query = "SELECT Korkrit_Pip_ID_Product, Korkrit_Pip_Name_Product, Korkrit_Pip_Qty_Stock, Korkrit_Pip_Price_Unit, Korkrit_Pip_Img_Path, LastUpdate 
+              FROM FinalExam_Korkrit_Pip_Inventory 
+              ORDER BY Korkrit_Pip_ID_Product ASC LIMIT $offset, $itemsPerPage";
     $result = mysqli_query($conn, $query);
     $products = [];
     if ($result && mysqli_num_rows($result) > 0) {
@@ -49,24 +61,25 @@ if ($isLoggedIn) {
         }
     }
 
-    $totalProducts = $totalItems;
+    // Calculate statistics
+    $totalProducts = 0;
     $availableProducts = 0;
     $soldProducts = 0;
     $totalValue = 0;
 
     $statsQuery = "SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
-        SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold,
-        SUM(StockQuantity) as total_value
-    FROM games";
+        SUM(Korkrit_Pip_Qty_Stock) as total_stock,
+        SUM(CASE WHEN Korkrit_Pip_Qty_Stock > 0 THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN Korkrit_Pip_Qty_Stock = 0 THEN 1 ELSE 0 END) as sold
+    FROM FinalExam_Korkrit_Pip_Inventory";
     $statsResult = mysqli_query($conn, $statsQuery);
     if ($statsResult && mysqli_num_rows($statsResult) > 0) {
         $stats = mysqli_fetch_assoc($statsResult);
         $totalProducts = $stats['total'];
         $availableProducts = $stats['available'];
         $soldProducts = $stats['sold'];
-        $totalValue = $stats['total_value'] ?? 0;
+        $totalValue = $stats['total_stock'] ?? 0;
     }
 
     mysqli_close($conn);
@@ -1117,61 +1130,64 @@ if ($isLoggedIn) {
         </div>
 
         <?php if (count($products) > 0): ?>
-        <div class="products-grid" id="productsGrid">
-            <?php foreach ($products as $index => $product): ?>
-            <div class="product-card" data-status="<?php echo $product['status']; ?>">
-                <div class="product-header">
-                    <div class="product-status <?php echo $product['status'] === 'available' ? 'status-available' : 'status-sold'; ?>">
-                        <span class="lang-en"><?php echo $product['status'] === 'available' ? 'Available' : 'Sold'; ?></span>
-                        <span class="lang-th" style="display: none;"><?php echo $product['status'] === 'available' ? 'มีสินค้า' : 'ขายแล้ว'; ?></span>
+            <div class="products-grid" id="productsGrid">
+    <?php foreach ($products as $index => $product): ?>
+    <div class="product-card" data-status="<?php echo $product['Korkrit_Pip_Qty_Stock'] > 0 ? 'available' : 'sold'; ?>">
+        <div class="product-header">
+            <div class="product-status <?php echo $product['Korkrit_Pip_Qty_Stock'] > 0 ? 'status-available' : 'status-sold'; ?>">
+                <span class="lang-en"><?php echo $product['Korkrit_Pip_Qty_Stock'] > 0 ? 'Available' : 'Sold'; ?></span>
+                <span class="lang-th" style="display: none"><?php echo $product['Korkrit_Pip_Qty_Stock'] > 0 ? 'มีสินค้า' : 'ขายแล้ว'; ?></span>
+            </div>
+            <h3 class="product-title">Product-<?php echo $product['Korkrit_Pip_ID_Product']; ?></h3>
+            <div class="product-game">Product: <?php echo $product['Korkrit_Pip_Name_Product']; ?></div>
+            <?php if (!empty($product['Korkrit_Pip_Img_Path'])): ?>
+            <div class="product-image">
+                <img src="<?php echo htmlspecialchars($product['Korkrit_Pip_Img_Path'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($product['Korkrit_Pip_Name_Product'], ENT_QUOTES, 'UTF-8'); ?>" style="max-width: 100%; height: auto; border-radius: 10px; margin-top: 10px;">
+            </div>
+            <?php else: ?>
+            <div class="product-image" style="text-align: center; padding: 10px; color: rgba(255, 255, 255, 0.7);">
+                <span class="lang-en">No Image Available</span>
+                <span class="lang-th" style="display: none;">ไม่มีรูปภาพ</span>
+            </div>
+            <?php endif; ?>
+        </div>
+        <div class="product-body">
+            <div class="product-details">
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <span class="lang-en">Unit Price</span>
+                        <span class="lang-th" style="display: none;">ราคาต่อหน่วย</span>
                     </div>
-                    <h3 class="product-title">Game-<?php echo $product['GameID']; ?></h3>
-                    <div class="product-game">Game: <?php echo $product['GameName']; ?></div>
+                    <div><?php echo number_format($product['Korkrit_Pip_Price_Unit'], 2); ?></div>
                 </div>
-                <div class="product-body">
-                    <div class="product-details">
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <span class="lang-en">Category</span>
-                                <span class="lang-th" style="display: none;">หมวดหมู่</span>
-                            </div>
-                            <div><?php echo $product['Category']; ?></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <span class="lang-en">Release Date</span>
-                                <span class="lang-th" style="display: none;">วันที่เผยแพร่</span>
-                            </div>
-                            <div><?php echo date('d/m/Y', strtotime($product['ReleaseDate'])); ?></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">
-                                <span class="lang-en">Last Update</span>
-                                <span class="lang-th" style="display: none;">อัปเดตล่าสุด</span>
-                            </div>
-                            <div><?php echo date('d/m/Y', strtotime($product['LastUpdate'])); ?></div>
-                        </div>
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <span class="lang-en">Last Update</span>
+                        <span class="lang-th" style="display: none;">อัปเดตล่าสุด</span>
                     </div>
-                    <div class="product-price">
-                        <span class="lang-en">Stock: <?php echo $product['StockQuantity']; ?></span>
-                        <span class="lang-th" style="display: none;">สต็อก: <?php echo $product['StockQuantity']; ?></span>
-                    </div>
-                    <div class="product-actions">
-                        <a href="edit_product.php?id=<?php echo $product['GameID']; ?>" class="action-btn edit-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            <span class="lang-en">Edit</span>
-                            <span class="lang-th" style="display: none;">แก้ไข</span>
-                        </a>
-                        <a href="javascript:void(0)" onclick="confirmDelete(<?php echo $product['GameID']; ?>)" class="action-btn delete-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                            <span class="lang-en">Delete</span>
-                            <span class="lang-th" style="display: none;">ลบ</span>
-                        </a>
-                    </div>
+                    <div><?php echo date('d/m/Y H:i:s', strtotime($product['LastUpdate'])); ?></div>
                 </div>
             </div>
-            <?php endforeach; ?>
+            <div class="product-price">
+                <span class="lang-en">Stock: <?php echo $product['Korkrit_Pip_Qty_Stock']; ?></span>
+                <span class="lang-th" style="display: none">สต็อก: <?php echo $product['Korkrit_Pip_Qty_Stock']; ?></span>
+            </div>
+            <div class="product-actions">
+                <a href="edit_product.php?id=<?php echo $product['Korkrit_Pip_ID_Product']; ?>" class="action-btn edit-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span class="lang-en">Edit</span>
+                    <span class="lang-th" style="display: none">แก้ไข</span>
+                </a>
+                <a href="javascript:void(0)" onclick="confirmDelete(<?php echo $product['Korkrit_Pip_ID_Product']; ?>)" class="action-btn delete-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <span class="lang-en">Delete</span>
+                    <span class="lang-th" style="display: none">ลบ</span>
+                </a>
+            </div>
         </div>
+    </div>
+<?php endforeach; ?>
+</div>
 
         <?php if ($totalPages > 1): ?>
         <div class="pagination">

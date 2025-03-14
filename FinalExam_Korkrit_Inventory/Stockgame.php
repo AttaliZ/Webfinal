@@ -13,22 +13,69 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-// กำหนดภาษาเริ่มต้นถ้ายังไม่มีในเซสชัน
-if (!isset($_SESSION['lang'])) {
-    $_SESSION['lang'] = 'en'; // เริ่มต้นเป็นภาษาอังกฤษ
-}
-
 // เปลี่ยนภาษาถ้ามีการส่งพารามิเตอร์ผ่าน URL
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'] === 'th' ? 'th' : 'en';
 }
 
-$current_lang = $_SESSION['lang'];
+$current_lang = $_SESSION['lang'] ?? 'en';
 
-// Query ดึงข้อมูลจากตาราง games รวม StockQuantity
-$query = "SELECT GameID, GameName, StockQuantity, Category, ReleaseDate, Score, Description, Developer, Platform, LastUpdate, GameImage, status 
-          FROM games 
-          ORDER BY LastUpdate ASC"; // เพิ่ม status ใน query
+// ตรวจสอบว่าตารางมีอยู่หรือไม่
+$checkTableQuery = "SHOW TABLES LIKE 'FinalExam_Korkrit_Pip_Inventory'";
+$checkTableResult = $conn->query($checkTableQuery);
+
+if ($checkTableResult->num_rows == 0) {
+    die("Error: Table 'FinalExam_Korkrit_Pip_Inventory' does not exist in the database.");
+}
+
+// จัดการการอัปโหลดภาพ
+if (isset($_POST['upload_image']) && isset($_POST['product_id'])) {
+    $productId = intval($_POST['product_id']);
+    $uploadDir = 'uploads/'; // ไดเรกทอรีสำหรับเก็บภาพ (ต้องสร้างโฟลเดอร์นี้ในเซิร์ฟเวอร์)
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    $targetFile = $uploadDir . basename($_FILES['image']['name']);
+    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+    $uploadOk = 1;
+
+    // ตรวจสอบขนาดไฟล์ (จำกัด 2MB)
+    if ($_FILES['image']['size'] > 2000000) {
+        echo "Error: File size must be less than 2MB.";
+        $uploadOk = 0;
+    }
+
+    // ตรวจสอบประเภทไฟล์
+    if (!in_array($imageFileType, $allowedTypes)) {
+        echo "Error: Only JPG, JPEG, PNG, and GIF files are allowed.";
+        $uploadOk = 0;
+    }
+
+    // ถ้าทุกอย่างถูกต้อง ให้อัปโหลดและอัปเดตฐานข้อมูล
+    if ($uploadOk && move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+        $imgPath = $targetFile;
+        $updateQuery = "UPDATE FinalExam_Korkrit_Pip_Inventory SET Korkrit_Pip_Img_Path = ? WHERE Korkrit_Pip_ID_Product = ?";
+        $stmt = mysqli_prepare($conn, $updateQuery);
+        mysqli_stmt_bind_param($stmt, "si", $imgPath, $productId);
+        if (mysqli_stmt_execute($stmt)) {
+            echo "Image uploaded and updated successfully.";
+            // รีเฟรชหน้าเพื่อแสดงข้อมูลใหม่
+            header("Refresh:0");
+        } else {
+            echo "Error updating image path: " . mysqli_error($conn);
+        }
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error uploading file.";
+    }
+}
+
+// Query ดึงข้อมูลจากตาราง FinalExam_Korkrit_Pip_Inventory
+$query = "SELECT Korkrit_Pip_ID_Product, Korkrit_Pip_Name_Product, Korkrit_Pip_Qty_Stock, Korkrit_Pip_Price_Unit, Korkrit_Pip_Img_Path, LastUpdate 
+          FROM FinalExam_Korkrit_Pip_Inventory 
+          ORDER BY Korkrit_Pip_ID_Product ASC";
 
 $result = $conn->query($query);
 
@@ -977,9 +1024,38 @@ if ($result === false) {
                 margin-top: 180px;
             }
         }
+        /* ======= Image Path Cell and Upload Button ======= */
+.image-path-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.upload-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.upload-btn:hover {
+    background-color: #45a049;
+}
+
+.upload-btn svg {
+    width: 16px;
+    height: 16px;
+}
 </style>
 </head>
-<body/ class="<?php echo $current_lang === 'th' ? 'thai' : ''; ?>">
+<body class="<?php echo $current_lang === 'th' ? 'thai' : ''; ?>">
     <!-- Animated Background Elements -->
     <div class="animated-bg"></div>
     <div class="glass-overlay"></div>
@@ -1049,58 +1125,58 @@ if ($result === false) {
         <?php
         if ($result && $result->num_rows > 0) {
             echo "<table>
-                    <thead>
-                        <tr>
-                            <th>
-                                <span class='lang-en'>Game Name</span>
-                                <span class='lang-th' style='display: none;'>ชื่อเกม</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Category</span>
-                                <span class='lang-th' style='display: none;'>หมวดหมู่</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Stock Quantity</span>
-                                <span class='lang-th' style='display: none;'>จำนวนคงเหลือ</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Platform</span>
-                                <span class='lang-th' style='display: none;'>แพลตฟอร์ม</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Developer</span>
-                                <span class='lang-th' style='display: none;'>ผู้พัฒนา</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Release Date</span>
-                                <span class='lang-th' style='display: none;'>วันที่วางจำหน่าย</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Score</span>
-                                <span class='lang-th' style='display: none;'>คะแนน</span>
-                            </th>
-                            <th>
-                                <span class='lang-en'>Status</span>
-                                <span class='lang-th' style='display: none;'>สถานะ</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>";
+        <thead>
+            <tr>
+                <th>
+                    <span class='lang-en'>Product ID</span>
+                    <span class='lang-th' style='display: none;'>รหัสสินค้า</span>
+                </th>
+                <th>
+                    <span class='lang-en'>Product Name</span>
+                    <span class='lang-th' style='display: none;'>ชื่อสินค้า</span>
+                </th>
+                <th>
+                    <span class='lang-en'>Stock Quantity</span>
+                    <span class='lang-th' style='display: none;'>จำนวนคงเหลือ</span>
+                </th>
+                <th>
+                    <span class='lang-en'>Unit Price</span>
+                    <span class='lang-th' style='display: none;'>ราคาต่อหน่วย</span>
+                </th>
+                <th>
+                    <span class='lang-en'>Image Path</span>
+                    <span class='lang-th' style='display: none;'>ที่อยู่รูปภาพ</span>
+                </th>
+                <th>
+                    <span class='lang-en'>Last Update</span>
+                    <span class='lang-th' style='display: none;'>อัปเดตล่าสุด</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>";
 
             while ($row = $result->fetch_assoc()) {
-                // ตรวจสอบ StockQuantity ต่ำกว่า 3 เพื่อตั้ง class low-stock
-                $rowClass = ($row['StockQuantity'] < 3) ? "low-stock" : "";
-                $status = $row['status'] === 'sold' ? ($current_lang === 'th' ? 'ขายแล้ว' : 'Sold') : ($current_lang === 'th' ? 'พร้อมขาย' : 'Available');
-
+                $rowClass = ($row['Korkrit_Pip_Qty_Stock'] < 3) ? "low-stock" : "";
                 echo "<tr class='{$rowClass}'>
-                        <td>" . htmlspecialchars($row['GameName'], ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . htmlspecialchars($row['Category'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . htmlspecialchars($row['StockQuantity'], ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . htmlspecialchars($row['Platform'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . htmlspecialchars($row['Developer'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . htmlspecialchars($row['ReleaseDate'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . htmlspecialchars($row['Score'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
-                        <td>" . $status . "</td>
+                        <td>" . htmlspecialchars($row['Korkrit_Pip_ID_Product']) . "</td>
+                        <td>" . htmlspecialchars($row['Korkrit_Pip_Name_Product']) . "</td>
+                        <td>" . htmlspecialchars($row['Korkrit_Pip_Qty_Stock']) . "</td>
+                        <td>" . htmlspecialchars(number_format($row['Korkrit_Pip_Price_Unit'], 2)) . "</td>
+                        <td>
+                            <div class='image-path-cell'>
+                                " . (!empty($row['Korkrit_Pip_Img_Path']) ? htmlspecialchars($row['Korkrit_Pip_Img_Path']) : '-') . "
+                                <form action='' method='post' enctype='multipart/form-data' style='margin-top: 5px;'>
+                                    <input type='hidden' name='product_id' value='" . $row['Korkrit_Pip_ID_Product'] . "'>
+                                    <input type='file' name='image' accept='image/*' required style='display: block; margin-bottom: 5px;'>
+                                    <button type='submit' name='upload_image' class='upload-btn'>
+                                        <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'></path><path d='M14 3v5h5'></path><path d='M16 13 12 9l-4 4'></path><path d='M12 9v8'></path></svg>
+                                        <span class='lang-en'>Upload Image</span>
+                                        <span class='lang-th' style='display: none;'>อัปโหลดภาพ</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>" . htmlspecialchars(date('d/m/Y H:i:s', strtotime($row['LastUpdate']))) . "</td>
                     </tr>";
             }
             echo "</tbody></table>";
@@ -1108,12 +1184,12 @@ if ($result === false) {
             echo "<div class='empty-state'>
                     <div class='empty-icon'>🎮</div>
                     <h3>
-                        <span class='lang-en' " . ($current_lang === 'th' ? 'style="display: none;"' : '') . ">No Game Data Available</span>
-                        <span class='lang-th' " . ($current_lang === 'en' ? 'style="display: none;"' : '') . ">ไม่มีข้อมูลเกมที่พร้อมใช้งาน</span>
+                        <span class='lang-en' " . ($current_lang === 'th' ? 'style=\"display: none;\"' : '') . ">No Product Data Available</span>
+                        <span class='lang-th' " . ($current_lang === 'en' ? 'style=\"display: none;\"' : '') . ">ไม่มีข้อมูลสินค้าที่พร้อมใช้งาน</span>
                     </h3>
                     <p>
-                        <span class='lang-en' " . ($current_lang === 'th' ? 'style="display: none;"' : '') . ">There are no games in the database.</span>
-                        <span class='lang-th' " . ($current_lang === 'en' ? 'style="display: none;"' : '') . ">ไม่มีเกมในฐานข้อมูล</span>
+                        <span class='lang-en' " . ($current_lang === 'th' ? 'style=\"display: none;\"' : '') . ">There are no products in the database.</span>
+                        <span class='lang-th' " . ($current_lang === 'en' ? 'style=\"display: none;\"' : '') . ">ไม่มีสินค้าในฐานข้อมูล</span>
                     </p>
                   </div>";
         }

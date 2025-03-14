@@ -11,21 +11,15 @@ if (!$conn) {
 }
 
 // Initialize $search_query with an empty string
-$search_query = ''; // กำหนดค่าเริ่มต้นที่นี่
+$search_query = '';
 
 // Handle bulk update
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_all'])) {
-    $game_ids = $_POST['game_id'];
-    $game_names = $_POST['game_name'];
-    $categories = $_POST['category'];
-    $release_dates = $_POST['release_date'];
-    $scores = $_POST['score'];
-    $developers = $_POST['developer'];
-    $platforms = $_POST['platform'];
-    $last_updates = $_POST['last_update'];
-    $statuses = $_POST['status'];
-    $stock_quantities = $_POST['stock_quantity'];
-    $current_images = $_POST['current_image'];
+    $product_ids = $_POST['product_id'];
+    $product_names = $_POST['product_name'];
+    $qty_stocks = $_POST['qty_stock'];
+    $price_units = $_POST['price_unit'];
+    $img_paths = $_POST['current_image'];
 
     // Get search query for redirect
     $redirect_search = "";
@@ -37,36 +31,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_all'])) {
     mysqli_begin_transaction($conn);
 
     try {
-        foreach ($game_ids as $index => $game_id) {
-            $game_id = mysqli_real_escape_string($conn, $game_id);
-            $game_name = mysqli_real_escape_string($conn, $game_names[$index]);
-            $category = mysqli_real_escape_string($conn, $categories[$index]);
-            $release_date = mysqli_real_escape_string($conn, $release_dates[$index]);
-            $score = floatval($scores[$index]);
-            $developer = mysqli_real_escape_string($conn, $developers[$index]);
-            $platform = mysqli_real_escape_string($conn, $platforms[$index]);
-            $last_update = mysqli_real_escape_string($conn, $last_updates[$index]);
-            $status = mysqli_real_escape_string($conn, $statuses[$index]);
-            $stock_quantity = intval($stock_quantities[$index]);
-            $current_image = mysqli_real_escape_string($conn, $current_images[$index]);
+        foreach ($product_ids as $index => $product_id) {
+            $product_id = mysqli_real_escape_string($conn, $product_id);
+            $product_name = mysqli_real_escape_string($conn, $product_names[$index]);
+            $qty_stock = intval($qty_stocks[$index]);
+            $price_unit = floatval($price_units[$index]);
+            $current_image = mysqli_real_escape_string($conn, $img_paths[$index]);
 
             // Validate required fields
-            if (empty($game_id) || empty($game_name) || empty($category) || empty($release_date) || 
-                empty($score) || empty($developer) || empty($platform) || empty($last_update) || 
-                empty($status) || !is_numeric($stock_quantity)) {
-                throw new Exception("All fields are required and Stock Quantity must be a number for Game ID: $game_id");
+            if (empty($product_id) || empty($product_name) || !is_numeric($qty_stock) || !is_numeric($price_unit)) {
+                throw new Exception("All fields are required and Qty Stock/Price Unit must be numbers for Product ID: $product_id");
             }
 
-            if (!in_array($status, ['available', 'sold'])) {
-                throw new Exception("Status must be 'available' or 'sold' for Game ID: $game_id");
+            if ($qty_stock < 0 || $qty_stock > 1000) {
+                throw new Exception("Qty Stock must be between 0 and 1000 for Product ID: $product_id");
             }
 
-            if ($stock_quantity < 0 || $stock_quantity > 1000) {
-                throw new Exception("Stock Quantity must be between 0 and 1000 for Game ID: $game_id");
+            if ($price_unit < 0) {
+                throw new Exception("Price Unit cannot be negative for Product ID: $product_id");
             }
 
             // Handle image upload for this row
-            $game_image = $current_image;
+            $new_img_path = $current_image;
             if (isset($_FILES['game_image']['name'][$index]) && $_FILES['game_image']['error'][$index] == UPLOAD_ERR_OK) {
                 $file_name = $_FILES['game_image']['name'][$index];
                 $file_tmp = $_FILES['game_image']['tmp_name'][$index];
@@ -77,11 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_all'])) {
                 $max_size = 5 * 1024 * 1024; // 5MB
 
                 if (!in_array($file_ext, $allowed_ext)) {
-                    throw new Exception("Only JPG, JPEG, PNG, and GIF files are allowed for Game ID: $game_id");
+                    throw new Exception("Only JPG, JPEG, PNG, and GIF files are allowed for Product ID: $product_id");
                 }
 
                 if ($file_size > $max_size) {
-                    throw new Exception("File size exceeds 5MB limit for Game ID: $game_id");
+                    throw new Exception("File size exceeds 5MB limit for Product ID: $product_id");
                 }
 
                 $upload_dir = 'uploads/';
@@ -90,33 +76,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_all'])) {
                 }
 
                 $new_file_name = uniqid() . '.' . $file_ext;
-                $game_image = $upload_dir . $new_file_name;
+                $new_img_path = $upload_dir . $new_file_name;
 
-                if (!move_uploaded_file($file_tmp, $game_image)) {
-                    throw new Exception("Failed to upload image for Game ID: $game_id");
+                if (!move_uploaded_file($file_tmp, $new_img_path)) {
+                    throw new Exception("Failed to upload image for Product ID: $product_id");
                 }
 
-                if (file_exists($current_image) && $current_image !== $game_image) {
+                if (file_exists($current_image) && $current_image !== $new_img_path) {
                     unlink($current_image);
                 }
             }
 
             // Update query
-            $update_query = "UPDATE games SET 
-                            GameName = '$game_name', 
-                            Category = '$category', 
-                            ReleaseDate = '$release_date', 
-                            Score = $score, 
-                            Developer = '$developer', 
-                            Platform = '$platform', 
-                            LastUpdate = '$last_update', 
-                            GameImage = '$game_image', 
-                            status = '$status', 
-                            StockQuantity = $stock_quantity
-                            WHERE GameID = '$game_id'";
+            $update_query = "UPDATE FinalExam_Korkrit_Pip_Inventory SET 
+                            Korkrit_Pip_Name_Product = '$product_name', 
+                            Korkrit_Pip_Qty_Stock = $qty_stock, 
+                            Korkrit_Pip_Price_Unit = $price_unit, 
+                            Korkrit_Pip_Img_Path = '$new_img_path'
+                            WHERE Korkrit_Pip_ID_Product = '$product_id'";
 
             if (!mysqli_query($conn, $update_query)) {
-                throw new Exception("Error updating Game ID: $game_id - " . mysqli_error($conn));
+                throw new Exception("Error updating Product ID: $product_id - " . mysqli_error($conn));
             }
         }
 
@@ -134,15 +114,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_all'])) {
 // Search functionality
 if (isset($_GET['search'])) {
     $search_query = mysqli_real_escape_string($conn, $_GET['search']);
-    $query = "SELECT * FROM games WHERE 
-              GameID LIKE '%$search_query%' OR 
-              GameName LIKE '%$search_query%' OR 
-              Category LIKE '%$search_query%' OR 
-              Developer LIKE '%$search_query%' OR 
-              Platform LIKE '%$search_query%'
-              ORDER BY GameID ASC";
+    $query = "SELECT * FROM FinalExam_Korkrit_Pip_Inventory WHERE 
+              Korkrit_Pip_ID_Product LIKE '%$search_query%' OR 
+              Korkrit_Pip_Name_Product LIKE '%$search_query%'
+              ORDER BY Korkrit_Pip_ID_Product ASC";
 } else {
-    $query = "SELECT * FROM games ORDER BY GameID ASC";
+    $query = "SELECT * FROM FinalExam_Korkrit_Pip_Inventory ORDER BY Korkrit_Pip_ID_Product ASC";
 }
 
 $result = mysqli_query($conn, $query);
@@ -151,15 +128,15 @@ if (!$result) {
     exit();
 }
 
-// Handle delete (unchanged)
+// Handle delete
 if (isset($_GET['delete'])) {
-    $game_id = mysqli_real_escape_string($conn, $_GET['delete']);
+    $product_id = mysqli_real_escape_string($conn, $_GET['delete']);
     $redirect_search = "";
     if (isset($_GET['search']) && !empty($_GET['search'])) {
         $redirect_search = "&search=" . urlencode($_GET['search']);
     }
     
-    $delete_query = "DELETE FROM games WHERE GameID = '$game_id'";
+    $delete_query = "DELETE FROM FinalExam_Korkrit_Pip_Inventory WHERE Korkrit_Pip_ID_Product = '$product_id'";
     if (mysqli_query($conn, $delete_query)) {
         header("Location: edit_product.php?deleted=true" . $redirect_search);
         exit();
@@ -1244,104 +1221,61 @@ if (isset($_GET['delete'])) {
     </form>
 
             <!-- Single Form for All Rows -->
-    <form method="POST" action="edit_product.php" enctype="multipart/form-data" id="bulkEditForm">
-        <input type="hidden" name="search_query" value="<?php echo htmlspecialchars($search_query); ?>">
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th><span class="lang-en">GAME NAME</span><span class="lang-th" style="display: none;">ชื่อเกม</span></th>
-                        <th><span class="lang-en">CATEGORY</span><span class="lang-th" style="display: none;">หมวดหมู่</span></th>
-                        <th><span class="lang-en">RELEASE DATE</span><span class="lang-th" style="display: none;">วันที่เผยแพร่</span></th>
-                        <th><span class="lang-en">SCORE</span><span class="lang-th" style="display: none;">คะแนน</span></th>
-                        <th><span class="lang-en">DEVELOPER</span><span class="lang-th" style="display: none;">ผู้พัฒนา</span></th>
-                        <th><span class="lang-en">PLATFORM</span><span class="lang-th" style="display: none;">แพลตฟอร์ม</span></th>
-                        <th><span class="lang-en">LAST UPDATE</span><span class="lang-th" style="display: none;">อัปเดตล่าสุด</span></th>
-                        <th><span class="lang-en">IMAGE PATH</span><span class="lang-th" style="display: none;">ที่อยู่รูปภาพ</span></th>
-                        <th><span class="lang-en">STATUS</span><span class="lang-th" style="display: none;">สถานะ</span></th>
-                        <th><span class="lang-en">STOCK</span><span class="lang-th" style="display: none;">สินค้าคงคลัง</span></th>
-                        <th><span class="lang-en">ACTIONS</span><span class="lang-th" style="display: none;">การจัดการ</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php $index = 0; while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($row['GameID']); ?></td>
-                        <td>
-                            <input type="text" class="edit-input" name="game_name[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['GameName']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="text" class="edit-input" name="category[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['Category']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="date" class="edit-input" name="release_date[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['ReleaseDate']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="number" step="0.1" min="0" max="10" class="edit-input" name="score[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['Score']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="text" class="edit-input" name="developer[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['Developer']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="text" class="edit-input" name="platform[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['Platform']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="date" class="edit-input" name="last_update[<?php echo $index; ?>]" 
-                                   value="<?php echo htmlspecialchars($row['LastUpdate']); ?>" required>
-                        </td>
-                        <td>
-                            <input type="file" name="game_image[<?php echo $index; ?>]" class="edit-input" accept="image/*">
-                            <input type="hidden" name="current_image[<?php echo $index; ?>]" value="<?php echo htmlspecialchars($row['GameImage']); ?>">
-                        </td>
-                        <td>
-                            <div class="status-cell">
-                                <span class="status-indicator <?php echo ($row['status'] === 'available') ? 'status-available' : 'status-sold'; ?>"></span>
-                                <select name="status[<?php echo $index; ?>]" class="edit-input" required>
-                                    <option value="available" <?php echo ($row['status'] === 'available') ? 'selected' : ''; ?>>
-                                        <span class="lang-en">Available</span>
-                                        <span class="lang-th" style="display: none;">มีสินค้า</span>
-                                    </option>
-                                    <option value="sold" <?php echo ($row['status'] === 'sold') ? 'selected' : ''; ?>>
-                                        <span class="lang-en">Sold</span>
-                                        <span class="lang-th" style="display: none;">ขายแล้ว</span>
-                                    </option>
-                                </select>
-                            </div>
-                        </td>
-                        <td>
-                            <input type="number" class="edit-input" name="stock_quantity[<?php echo $index; ?>]" min="0" max="1000" 
-                                   value="<?php echo htmlspecialchars($row['StockQuantity']); ?>" required>
-                        </td>
-                        <td class="actions-cell">
-                            <input type="hidden" name="game_id[<?php echo $index; ?>]" value="<?php echo htmlspecialchars($row['GameID']); ?>">
-                            <a href="edit_product.php?delete=<?php echo htmlspecialchars($row['GameID']); ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
-                               class="delete-btn" title="Delete"
-                               onclick="return confirm('Are you sure you want to delete this product?')">
-                                ✗
-                            </a>
-                        </td>
-                    </tr>
-                <?php $index++; endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-        <!-- Update All Button -->
-        <div style="margin-top: 20px; text-align: right;">
-            <button type="submit" name="update_all" class="update-btn" style="width: auto; padding: 10px 20px; border-radius: 15px;">
-                <span class="lang-en">Update All</span>
-                <span class="lang-th" style="display: none;">อัปเดตทั้งหมด</span>
-            </button>
-        </div>
-    </form>
-</div>
-
+            <form method="POST" action="edit_product.php" enctype="multipart/form-data" id="bulkEditForm">
+    <input type="hidden" name="search_query" value="<?php echo htmlspecialchars($search_query); ?>">
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th><span class="lang-en">PRODUCT NAME</span><span class="lang-th" style="display: none;">ชื่อสินค้า</span></th>
+                    <th><span class="lang-en">QUANTITY IN STOCK</span><span class="lang-th" style="display: none;">จำนวนคงเหลือ</span></th>
+                    <th><span class="lang-en">UNIT PRICE</span><span class="lang-th" style="display: none;">ราคาต่อหน่วย</span></th>
+                    <th><span class="lang-en">IMAGE PATH</span><span class="lang-th" style="display: none;">ที่อยู่รูปภาพ</span></th>
+                    <th><span class="lang-en">ACTIONS</span><span class="lang-th" style="display: none;">การจัดการ</span></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php $index = 0; while ($row = mysqli_fetch_assoc($result)): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($row['Korkrit_Pip_ID_Product']); ?></td>
+                    <td>
+                        <input type="text" class="edit-input" name="product_name[<?php echo $index; ?>]" 
+                               value="<?php echo htmlspecialchars($row['Korkrit_Pip_Name_Product']); ?>" required>
+                    </td>
+                    <td>
+                        <input type="number" class="edit-input" name="qty_stock[<?php echo $index; ?>]" min="0" max="1000" 
+                               value="<?php echo htmlspecialchars($row['Korkrit_Pip_Qty_Stock']); ?>" required>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" class="edit-input" name="price_unit[<?php echo $index; ?>]" min="0" 
+                               value="<?php echo htmlspecialchars($row['Korkrit_Pip_Price_Unit']); ?>" required>
+                    </td>
+                    <td>
+                        <input type="file" name="game_image[<?php echo $index; ?>]" class="edit-input" accept="image/*">
+                        <input type="hidden" name="current_image[<?php echo $index; ?>]" value="<?php echo htmlspecialchars($row['Korkrit_Pip_Img_Path'] ?? ''); ?>">
+                    </td>
+                    <td class="actions-cell">
+                        <input type="hidden" name="product_id[<?php echo $index; ?>]" value="<?php echo htmlspecialchars($row['Korkrit_Pip_ID_Product']); ?>">
+                        <a href="edit_product.php?delete=<?php echo htmlspecialchars($row['Korkrit_Pip_ID_Product']); ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
+                           class="delete-btn" title="Delete"
+                           onclick="return confirm('Are you sure you want to delete this product?')">
+                            ✗
+                        </a>
+                    </td>
+                </tr>
+            <?php $index++; endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+    <!-- Update All Button -->
+    <div style="margin-top: 20px; text-align: right;">
+        <button type="submit" name="update_all" class="update-btn" style="width: auto; padding: 10px 20px; border-radius: 15px;">
+            <span class="lang-en">Update All</span>
+            <span class="lang-th" style="display: none;">อัปเดตทั้งหมด</span>
+        </button>
+    </div>
+</form>
     <script>
         // Language Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {

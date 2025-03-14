@@ -1,17 +1,38 @@
 <?php
 include('db_connection.php');
 
+// ตรวจสอบการเชื่อมต่อฐานข้อมูล
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+// ตรวจสอบโฟลเดอร์ uploads/
+$targetDir = "uploads/";
+if (!file_exists($targetDir)) {
+    mkdir($targetDir, 0777, true); // สร้างโฟลเดอร์ถ้ายังไม่มี
+} elseif (!is_writable($targetDir)) {
+    die("Error: The uploads directory is not writable. Please set permissions to 777.");
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $gameName = mysqli_real_escape_string($conn, $_POST['gameName']);
-    $category = mysqli_real_escape_string($conn, $_POST['category']);
-    $releaseDate = mysqli_real_escape_string($conn, $_POST['releaseDate']);
-    $score = mysqli_real_escape_string($conn, $_POST['score']);
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $developer = mysqli_real_escape_string($conn, $_POST['developer']);
-    $platform = mysqli_real_escape_string($conn, $_POST['platform']);
+    // รับข้อมูลจากฟอร์มและตรวจสอบ
+    $productName = isset($_POST['gameName']) ? mysqli_real_escape_string($conn, $_POST['gameName']) : '';
+    $qtyStock = isset($_POST['qtyStock']) ? mysqli_real_escape_string($conn, $_POST['qtyStock']) : '';
+    $priceUnit = isset($_POST['priceUnit']) ? mysqli_real_escape_string($conn, $_POST['priceUnit']) : '';
+
+    // ตรวจสอบว่าข้อมูลจากฟอร์มครบถ้วนหรือไม่
+    if (empty($productName) || empty($qtyStock) || empty($priceUnit)) {
+        echo "<p class='error-msg'>Error: All fields are required. Please fill in all the fields.</p>";
+        exit;
+    }
+
+    // ตรวจสอบว่าไฟล์ถูกอัปโหลดหรือไม่
+    if (!isset($_FILES['gameImage']) || $_FILES['gameImage']['error'] === UPLOAD_ERR_NO_FILE) {
+        echo "<p class='error-msg'>Error: No image file uploaded. Please select an image.</p>";
+        exit;
+    }
 
     // จัดการการอัปโหลดไฟล์
-    $targetDir = "uploads/"; // โฟลเดอร์ที่เก็บไฟล์
     $defaultFileName = uniqid() . '_' . basename($_FILES["gameImage"]["name"]); // สร้างชื่อไฟล์ไม่ซ้ำ
     $targetFile = $targetDir . $defaultFileName;
     $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
@@ -25,23 +46,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // อัปโหลดไฟล์
     if (move_uploaded_file($_FILES["gameImage"]["tmp_name"], $targetFile)) {
-        $sql = "INSERT INTO games (GameName, Category, ReleaseDate, Score, Description, Developer, Platform, GameImage, LastUpdate)
-                VALUES ('$gameName', '$category', '$releaseDate', '$score', '$description', '$developer', '$platform', '$targetFile', NOW())";
+        // SQL Query - Updated to match the correct table and column names
+        $sql = "INSERT INTO FinalExam_Korkrit_Pip_Inventory (Korkrit_Pip_Name_Product, Korkrit_Pip_Qty_Stock, Korkrit_Pip_Price_Unit, Korkrit_Pip_Img_Path)
+                VALUES ('$productName', '$qtyStock', '$priceUnit', '$targetFile')";
 
         if (mysqli_query($conn, $sql)) {
-            echo "<p class='success-msg'>Game added successfully!</p>";
+            echo "<p class='success-msg'>Product added successfully!</p>";
         } else {
             echo "<p class='error-msg'>Error: " . mysqli_error($conn) . "</p>";
             // ลบไฟล์ที่อัปโหลดแล้วหากเกิดข้อผิดพลาด
-            unlink($targetFile);
+            if (file_exists($targetFile)) {
+                unlink($targetFile);
+            }
         }
     } else {
-        echo "<p class='error-msg'>Error: Failed to upload image.</p>";
+        // เพิ่มการ debug หากการอัปโหลดไฟล์ล้มเหลว
+        $uploadError = $_FILES["gameImage"]["error"];
+        echo "<p class='error-msg'>Error: Failed to upload image. Error code: $uploadError</p>";
+        echo "<p class='error-msg'>Details: " . print_r($_FILES["gameImage"], true) . "</p>";
     }
+} else {
+    echo "<p class='error-msg'>Error: Invalid request method. Please use the form to submit data.</p>";
 }
 
 mysqli_close($conn);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -216,7 +246,7 @@ mysqli_close($conn);
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 1000;
+            z-index: 50;
             transition: all var(--transition-speed) ease;
         }
 
@@ -805,119 +835,89 @@ mysqli_close($conn);
         .hover-scale:hover {
             transform: scale(1.05);
         }
+
         .suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 0 0 16px 16px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 0 0 16px 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 15;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
 
-.suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 0 0 16px 16px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
+        .suggestion-item {
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
 
-.suggestion-item {
-    padding: 10px 20px;
-    color: white;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
+        .suggestion-item:hover {
+            background: rgba(67, 97, 238, 0.5);
+        }
 
-.suggestion-item:hover {
-    background: rgba(67, 97, 238, 0.5);
-}
-.tooltip-icon {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: help;
-    padding: 5px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    transition: color 0.3s ease;
-    z-index: 1001; /* เพิ่ม z-index ให้สูงมาก */
-}
+        .tooltip-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: help;
+            padding: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: color 0.3s ease;
+            z-index: 1001;
+        }
 
-.tooltip-icon:hover {
-    color: white;
-}
+        .tooltip-icon:hover {
+            color: white;
+        }
 
-.tooltip {
-    position: absolute;
-    top: calc(100% + 5px); /* ปรับระยะห่างจากช่อง */
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    z-index: 1000; /* อยู่บนสุด */
-    max-width: 250px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    display: none;
-    white-space: normal;
-    line-height: 1.2;
-    word-break: break-word;
-}
+        .tooltip {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            max-width: 250px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            white-space: normal;
+            line-height: 1.2;
+            word-break: break-word;
+        }
 
-.tooltip::after {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
-    z-index: 1000; /* ต้องเท่ากับ tooltip */
-}
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+            z-index: 1000;
+        }
 
-/* ปรับ z-index ขององค์ประกอบอื่นให้ต่ำกว่า */
-.input-group {
-    position: relative;
-    margin-bottom: 1rem;
-    perspective: 1000px;
-    z-index: 10; /* ต่ำกว่า tooltip */
-}
-
-.suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 0 0 16px 16px;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 15; /* ต่ำกว่า tooltip แต่สูงกว่า input */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-
-
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+            perspective: 1000px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -934,7 +934,7 @@ mysqli_close($conn);
 
     <!-- Modern Navbar -->
     <nav class="navbar">
-        <a href="../../HomePage.php" class="nav-logo">
+        <a href="../FinalExam_Korkrit_Inventory/index.html" class="nav-logo">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h5v2H7v-2z"/></svg>
             <span class="lang-en">INVENTORY</span>
             <span class="lang-th" style="display: none;">สินค้าคงคลัง</span>
@@ -994,229 +994,185 @@ mysqli_close($conn);
         </div>
 
         <div class="form-body">
-    <form method="POST" action="" class="form-grid" enctype="multipart/form-data">
-        <!-- ช่อง Prompt ใหม่กับไอคอน tooltips -->
-        <div class="input-group">
-            <input type="text" id="gamePrompt" placeholder=" " autocomplete="off">
-            <label for="gamePrompt">
-                <span class="lang-en">Prompt Search</span>
-                <span class="lang-th" style="display: none;">ค้นหาด้วยคำแนะนำ</span>
-            </label>
-            <span class="tooltip-icon" id="tooltipIcon">i</span>
-            <div id="promptTooltip" class="tooltip" style="display: none;"></div>
-            <div id="promptSuggestions" class="suggestions" style="display: none;"></div>
+            <form method="POST" action="" class="form-grid" enctype="multipart/form-data">
+                <!-- ช่อง Prompt ใหม่กับไอคอน tooltips -->
+                <div class="input-group">
+                    <input type="text" id="gamePrompt" placeholder=" " autocomplete="off">
+                    <label for="gamePrompt">
+                        <span class="lang-en">Prompt Search</span>
+                        <span class="lang-th" style="display: none;">ค้นหาด้วยคำแนะนำ</span>
+                    </label>
+                    <span class="tooltip-icon" id="tooltipIcon">i</span>
+                    <div id="promptTooltip" class="tooltip" style="display: none;"></div>
+                    <div id="promptSuggestions" class="suggestions" style="display: none;"></div>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="gameName" name="gameName" placeholder=" " required>
+                    <label for="gameName">
+                        <span class="lang-en">Product Name</span>
+                        <span class="lang-th" style="display: none;">ชื่อสินค้า</span>
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <input type="number" id="qtyStock" name="qtyStock" placeholder=" " required>
+                    <label for="qtyStock">
+                        <span class="lang-en">Quantity in Stock</span>
+                        <span class="lang-th" style="display: none;">จำนวนคงเหลือ</span>
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <input type="number" id="priceUnit" name="priceUnit" step="0.01" placeholder=" " required>
+                    <label for="priceUnit">
+                        <span class="lang-en">Unit Price</span>
+                        <span class="lang-th" style="display: none;">ราคาต่อหน่วย</span>
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <input type="file" id="gameImage" name="gameImage" accept="image/*" required>
+                    <label for="gameImage">
+                        <span class="lang-en">Upload Product Image</span>
+                        <span class="lang-th" style="display: none;">อัปโหลดรูปภาพสินค้า</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span class="lang-en">Add Product to Inventory</span>
+                    <span class="lang-th" style="display: none;">เพิ่มสินค้าเข้าคลัง</span>
+                </button>
+            </form>
         </div>
+    </div>
 
-        <div class="input-group">
-            <input type="text" id="gameName" name="gameName" placeholder=" " required>
-            <label for="gameName">
-                <span class="lang-en">Game Name</span>
-                <span class="lang-th" style="display: none;">ชื่อเกม</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="category" name="category" placeholder=" " required>
-            <label for="category">
-                <span class="lang-en">Category</span>
-                <span class="lang-th" style="display: none;">หมวดหมู่</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="date" id="releaseDate" name="releaseDate" placeholder=" " required>
-            <label for="releaseDate">
-                <span class="lang-en">Release Date</span>
-                <span class="lang-th" style="display: none;">วันที่วางจำหน่าย</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="number" id="score" name="score" step="0.1" min="0" max="10" placeholder=" " required>
-            <label for="score">
-                <span class="lang-en">Score (0-10)</span>
-                <span class="lang-th" style="display: none;">คะแนน (0-10)</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="description" name="description" placeholder=" " required>
-            <label for="description">
-                <span class="lang-en">Description</span>
-                <span class="lang-th" style="display: none;">คำอธิบาย</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="developer" name="developer" placeholder=" " required>
-            <label for="developer">
-                <span class="lang-en">Developer</span>
-                <span class="lang-th" style="display: none;">ผู้พัฒนา</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="platform" name="platform" placeholder=" " required>
-            <label for="platform">
-                <span class="lang-en">Platform</span>
-                <span class="lang-th" style="display: none;">แพลตฟอร์ม</span>
-            </label>
-        </div>
-
-        <div class="input-group">
-            <input type="file" id="gameImage" name="gameImage" accept="image/*" required>
-            <label for="gameImage">
-                <span class="lang-en">Upload Game Image</span>
-                <span class="lang-th" style="display: none;">อัปโหลดรูปภาพเกม</span>
-            </label>
-        </div>
-
-        <button type="submit" class="submit-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            <span class="lang-en">Add Game to Inventory</span>
-            <span class="lang-th" style="display: none;">เพิ่มเกมเข้าคลัง</span>
-        </button>
-    </form>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const langToggle = document.getElementById('langToggle');
-    const currentLang = document.querySelector('.current-lang');
-    const body = document.body;
-    
-    langToggle.addEventListener('click', function() {
-        if (body.classList.contains('thai')) {
-            body.classList.remove('thai');
-            currentLang.textContent = 'EN';
-            document.querySelectorAll('.lang-th').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'inline-block');
-        } else {
-            body.classList.add('thai');
-            currentLang.textContent = 'TH';
-            document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.lang-th').forEach(el => el.style.display = 'inline-block');
-        }
-    });
-    
-    window.addEventListener('scroll', function() {
-        const navbar = document.querySelector('.navbar');
-        if (window.scrollY > 50) navbar.classList.add('scrolled');
-        else navbar.classList.remove('scrolled');
-    });
-    
-    const inputs = document.querySelectorAll('input, select');
-    inputs.forEach(input => {
-        input.addEventListener('focus', () => input.parentElement.classList.add('focused'));
-        input.addEventListener('blur', () => input.parentElement.classList.remove('focused'));
-    });
-    
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navLinks = document.querySelector('.nav-links');
-    
-    mobileMenuBtn.addEventListener('click', function() {
-        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-    });
-    
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) navLinks.style.display = 'flex';
-        else navLinks.style.display = 'none';
-    });
-
-    // ข้อมูลเกมที่กำหนดล่วงหน้า
-    const gameData = [
-        {
-            GameName: "Call of Duty",
-            Category: "FPS",
-            ReleaseDate: "2023-11-10",
-            Score: "8.5",
-            Description: "A fast-paced first-person shooter with intense multiplayer action.",
-            Developer: "Activision",
-            Platform: "PC, PS5, Xbox"
-        },
-        {
-            GameName: "FIFA 23",
-            Category: "Sports",
-            ReleaseDate: "2022-09-30",
-            Score: "7.8",
-            Description: "The latest installment in the FIFA series with updated teams and gameplay.",
-            Developer: "EA Sports",
-            Platform: "PC, PS4, PS5, Xbox"
-        },
-        {
-            GameName: "The Witcher 3",
-            Category: "RPG",
-            ReleaseDate: "2015-05-19",
-            Score: "9.3",
-            Description: "An open-world RPG with a rich story and expansive world.",
-            Developer: "CD Projekt",
-            Platform: "PC, PS4, Xbox One, Switch"
-        }
-    ];
-
-    // Autocomplete functionality สำหรับช่อง Prompt
-    const gamePromptInput = document.getElementById('gamePrompt');
-    const promptSuggestions = document.getElementById('promptSuggestions');
-    const tooltipIcon = document.getElementById('tooltipIcon');
-    const tooltip = document.getElementById('promptTooltip');
-    
-    gamePromptInput.addEventListener('input', function() {
-        const query = this.value.trim().toLowerCase();
-        if (query.length < 2) {
-            promptSuggestions.style.display = 'none';
-            return;
-        }
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const langToggle = document.getElementById('langToggle');
+        const currentLang = document.querySelector('.current-lang');
+        const body = document.body;
         
-        const matches = gameData.filter(game => game.GameName.toLowerCase().includes(query));
+        langToggle.addEventListener('click', function() {
+            if (body.classList.contains('thai')) {
+                body.classList.remove('thai');
+                currentLang.textContent = 'EN';
+                document.querySelectorAll('.lang-th').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'inline-block');
+            } else {
+                body.classList.add('thai');
+                currentLang.textContent = 'TH';
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-th').forEach(el => el.style.display = 'inline-block');
+            }
+        });
         
-        promptSuggestions.innerHTML = '';
-        if (matches.length === 0) {
-            promptSuggestions.style.display = 'none';
-            return;
-        }
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
         
-        promptSuggestions.style.display = 'block';
-        matches.forEach(game => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.classList.add('suggestion-item');
-            suggestionItem.textContent = game.GameName;
-            
-            suggestionItem.addEventListener('click', function() {
-                document.getElementById('gameName').value = game.GameName || '';
-                document.getElementById('category').value = game.Category || '';
-                document.getElementById('developer').value = game.Developer || '';
-                document.getElementById('platform').value = game.Platform || '';
-                document.getElementById('releaseDate').value = game.ReleaseDate || '';
-                document.getElementById('score').value = game.Score || '';
-                document.getElementById('description').value = game.Description || '';
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => input.parentElement.classList.add('focused'));
+            input.addEventListener('blur', () => input.parentElement.classList.remove('focused'));
+        });
+        
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+        
+        mobileMenuBtn.addEventListener('click', function() {
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        });
+        
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) navLinks.style.display = 'flex';
+            else navLinks.style.display = 'none';
+        });
+
+        // ข้อมูลสินค้าที่กำหนดล่วงหน้า
+        const productData = [
+            {
+                GameName: "Milk oat",
+                QtyStock: 10,
+                PriceUnit: 1999.99,
+                ImgPath: "uploads/call_of_duty.jpg"
+            },
+            {
+                GameName: "Milk green tea",
+                QtyStock: 5,
+                PriceUnit: 1599.50,
+                ImgPath: "uploads/fifa_23.jpg"
+            },
+            {
+                GameName: "Pink milk",
+                QtyStock: 8,
+                PriceUnit: 1299.00,
+                ImgPath: "uploads/the_witcher_3.jpg"
+            }
+        ];
+
+        // Autocomplete functionality สำหรับช่อง Prompt
+        const gamePromptInput = document.getElementById('gamePrompt');
+        const promptSuggestions = document.getElementById('promptSuggestions');
+        const tooltipIcon = document.getElementById('tooltipIcon');
+        const tooltip = document.getElementById('promptTooltip');
+        
+        gamePromptInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            if (query.length < 2) {
                 promptSuggestions.style.display = 'none';
-                gamePromptInput.value = '';
-            });
+                return;
+            }
             
-            promptSuggestions.appendChild(suggestionItem);
+            const matches = productData.filter(product => product.GameName.toLowerCase().includes(query));
+            
+            promptSuggestions.innerHTML = '';
+            if (matches.length === 0) {
+                promptSuggestions.style.display = 'none';
+                return;
+            }
+            
+            promptSuggestions.style.display = 'block';
+            matches.forEach(product => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.classList.add('suggestion-item');
+                suggestionItem.textContent = product.GameName;
+                
+                suggestionItem.addEventListener('click', function() {
+                    document.getElementById('gameName').value = product.GameName || '';
+                    document.getElementById('qtyStock').value = product.QtyStock || '';
+                    document.getElementById('priceUnit').value = product.PriceUnit || '';
+                    promptSuggestions.style.display = 'none';
+                    gamePromptInput.value = '';
+                });
+                
+                promptSuggestions.appendChild(suggestionItem);
+            });
+        });
+
+        // Tooltips functionality
+        tooltipIcon.addEventListener('mouseover', function() {
+            const promptList = productData.map(product => product.GameName).join(', ');
+            tooltip.textContent = `Prompts: ${promptList}`;
+            tooltip.style.display = 'block';
+        });
+
+        tooltipIcon.addEventListener('mouseout', function() {
+            tooltip.style.display = 'none';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!gamePromptInput.contains(e.target) && !promptSuggestions.contains(e.target)) {
+                promptSuggestions.style.display = 'none';
+            }
+            if (!tooltipIcon.contains(e.target)) {
+                tooltip.style.display = 'none';
+            }
         });
     });
-
-    // Tooltips functionality
-    tooltipIcon.addEventListener('mouseover', function() {
-        const promptList = gameData.map(game => game.GameName).join(', ');
-        tooltip.textContent = `Prompts: ${promptList}`;
-        tooltip.style.display = 'block';
-    });
-
-    tooltipIcon.addEventListener('mouseout', function() {
-        tooltip.style.display = 'none';
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!gamePromptInput.contains(e.target) && !promptSuggestions.contains(e.target)) {
-            promptSuggestions.style.display = 'none';
-        }
-        if (!tooltipIcon.contains(e.target)) {
-            tooltip.style.display = 'none';
-        }
-    });
-});
-</script>
+    </script>
 </body>
 </html>
