@@ -1,15 +1,34 @@
 <?php
+session_start();
 require 'db_connection.php';
+
+// ตรวจสอบการล็อกอิน
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
 // ตรวจสอบการเชื่อมต่อ
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
+// กำหนดภาษาเริ่มต้นถ้ายังไม่มีในเซสชัน
+if (!isset($_SESSION['lang'])) {
+    $_SESSION['lang'] = 'en'; // เริ่มต้นเป็นภาษาอังกฤษ
+}
+
+// เปลี่ยนภาษาถ้ามีการส่งพารามิเตอร์ผ่าน URL
+if (isset($_GET['lang'])) {
+    $_SESSION['lang'] = $_GET['lang'] === 'th' ? 'th' : 'en';
+}
+
+$current_lang = $_SESSION['lang'];
+
 // Query ดึงข้อมูลจากตาราง games รวม StockQuantity
-$query = "SELECT GameID, GameName, StockQuantity, Category, ReleaseDate, Score, Description, Developer, Platform, LastUpdate, GameImage 
+$query = "SELECT GameID, GameName, StockQuantity, Category, ReleaseDate, Score, Description, Developer, Platform, LastUpdate, GameImage, status 
           FROM games 
-          ORDER BY LastUpdate ASC"; // เรียงตามวันที่อัปเดตล่าสุด
+          ORDER BY LastUpdate ASC"; // เพิ่ม status ใน query
 
 $result = $conn->query($query);
 
@@ -20,14 +39,14 @@ if ($result === false) {
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo $current_lang; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Show Product</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
+   <style>
         :root {
             --primary-color: #4361ee;
             --secondary-color: #7209b7;
@@ -42,9 +61,9 @@ if ($result === false) {
             --transition-speed: 0.3s;
         }
 
-        * {
+        * {   
             margin: 0;
-            padding: 0;
+            padding: 0;                  
             box-sizing: border-box;
         }
 
@@ -958,9 +977,9 @@ if ($result === false) {
                 margin-top: 180px;
             }
         }
-    </style>
+</style>
 </head>
-<body>
+<body/ class="<?php echo $current_lang === 'th' ? 'thai' : ''; ?>">
     <!-- Animated Background Elements -->
     <div class="animated-bg"></div>
     <div class="glass-overlay"></div>
@@ -972,40 +991,40 @@ if ($result === false) {
         <div class="shape"></div>
     </div>
 
-   <!-- Navbar -->
-<nav class="navbar">
-    <a href="../../HomePage.php" class="nav-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h5v2H7v-2z"/></svg>
-        <span class="lang-en">INVENTORY</span>
-        <span class="lang-th" style="display: none;">สินค้าคงคลัง</span>
-    </a>
-    <ul class="nav-links">
-        <li><a href="inventory.php">
-            <span class="lang-en">Store</span>
-            <span class="lang-th" style="display: none;">ร้านค้า</span>
-        </a></li>
-        <li><a href="edit_product.php">
-            <span class="lang-en">Edit Product</span>
-            <span class="lang-th" style="display: none;">แก้ไขสินค้า</span>
-        </a></li>
-        <li><a href="Stockgame.php" class="active">
-            <span class="lang-en">Show Product</span>
-            <span class="lang-th" style="display: none;">แสดงสินค้า</span>
-        </a></li>
-    </ul>
-    <div class="nav-right">
-        <a href="add_product.php" class="add-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span class="lang-en">Add Product</span>
-            <span class="lang-th" style="display: none;">เพิ่มสินค้า</span>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="../../HomePage.php" class="nav-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h5v2H7v-2z"/></svg>
+            <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>INVENTORY</span>
+            <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>สินค้าคงคลัง</span>
         </a>
-        <button class="lang-switch" id="langToggle">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-2.29-2.333A17.9 17.9 0 0 1 8.027 13H4.062a8.008 8.008 0 0 0 5.648 6.667zM10.03 13c.151 2.439.848 4.73 1.97 6.752A15.905 15.905 0 0 0 13.97 13h-3.94zm9.908 0h-3.965a17.9 17.9 0 0 1-1.683 6.667A8.008 8.008 0 0 0 19.938 13zM4.062 11h3.965A17.9 17.9 0 0 1 9.71 4.333 8.008 8.008 0 0 0 4.062 11zm5.969 0h3.938A15.905 15.905 0 0 0 12 4.248 15.905 15.905 0 0 0 10.03 11zm4.259-6.667A17.9 17.9 0 0 1 15.973 11h3.965a8.008 8.008 0 0 0-5.648-6.667z"/></svg>
-            <span class="current-lang">EN</span>
-            <span class="lang-badge">2</span>
-        </button>
-    </div>
-</nav>
+        <ul class="nav-links">
+            <li><a href="inventory.php">
+                <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>Store</span>
+                <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>ร้านค้า</span>
+            </a></li>
+            <li><a href="edit_product.php">
+                <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>Edit Product</span>
+                <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>แก้ไขสินค้า</span>
+            </a></li>
+            <li><a href="Stockgame.php" class="active">
+                <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>Show Product</span>
+                <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>แสดงสินค้า</span>
+            </a></li>
+        </ul>
+        <div class="nav-right">
+            <a href="add_product.php" class="add-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>Add Product</span>
+                <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>เพิ่มสินค้า</span>
+            </a>
+            <a href="?lang=<?php echo $current_lang === 'en' ? 'th' : 'en'; ?>" class="lang-switch" id="langToggle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-2.29-2.333A17.9 17.9 0 0 1 8.027 13H4.062a8.008 8.008 0 0 0 5.648 6.667zM10.03 13c.151 2.439.848 4.73 1.97 6.752A15.905 15.905 0 0 0 13.97 13h-3.94zm9.908 0h-3.965a17.9 17.9 0 0 1-1.683 6.667A8.008 8.008 0 0 0 19.938 13zM4.062 11h3.965A17.9 17.9 0 0 1 9.71 4.333 8.008 8.008 0 0 0 4.062 11zm5.969 0h3.938A15.905 15.905 0 0 0 12 4.248 15.905 15.905 0 0 0 10.03 11zm4.259-6.667A17.9 17.9 0 0 1 15.973 11h3.965a8.008 8.008 0 0 0-5.648-6.667z"/></svg>
+                <span class="current-lang"><?php echo strtoupper($current_lang); ?></span>
+                <span class="lang-badge">2</span>
+            </a>
+        </div>
+    </nav>
     
     <!-- Main Content -->
     <div class="container">
@@ -1015,154 +1034,108 @@ if ($result === false) {
             </div>
             <div>
                 <h2>
-                    <span class="lang-en">STOCK DASHBOARD</span>
-                    <span class="lang-th" style="display: none;">แดชบอร์ดสินค้าคงคลัง</span>
+                    <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>STOCK DASHBOARD</span>
+                    <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>แดชบอร์ดสินค้าคงคลัง</span>
                 </h2>
                 <p class="subtitle">
-                    <span class="lang-en">Monitor inventory levels and product details</span>
-                    <span class="lang-th" style="display: none;">ตรวจสอบระดับสินค้าคงคลังและรายละเอียดผลิตภัณฑ์</span>
+                    <span class="lang-en" <?php echo $current_lang === 'th' ? 'style="display: none;"' : ''; ?>>Monitor inventory levels and product details</span>
+                    <span class="lang-th" <?php echo $current_lang === 'en' ? 'style="display: none;"' : ''; ?>>ตรวจสอบระดับสินค้าคงคลังและรายละเอียดผลิตภัณฑ์</span>
                 </p>
             </div>
         </div>
         
         <div class="table-container">
-            <div class="table-wrapper">
-                <?php
-                if ($result && $result->num_rows > 0) {
-                    echo "<table>
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <span class='lang-en'>Game ID</span>
-                                        <span class='lang-th' style='display: none;'>รหัสเกม</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Game Name</span>
-                                        <span class='lang-th' style='display: none;'>ชื่อเกม</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Stock Quantity</span>
-                                        <span class='lang-th' style='display: none;'>จำนวนคงเหลือ</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Category</span>
-                                        <span class='lang-th' style='display: none;'>หมวดหมู่</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Release Date</span>
-                                        <span class='lang-th' style='display: none;'>วันที่วางจำหน่าย</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Score</span>
-                                        <span class='lang-th' style='display: none;'>คะแนน</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Developer</span>
-                                        <span class='lang-th' style='display: none;'>ผู้พัฒนา</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Platform</span>
-                                        <span class='lang-th' style='display: none;'>แพลตฟอร์ม</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Last Update</span>
-                                        <span class='lang-th' style='display: none;'>อัปเดตล่าสุด</span>
-                                    </th>
-                                    <th>
-                                        <span class='lang-en'>Game Image</span>
-                                        <span class='lang-th' style='display: none;'>รูปภาพเกม</span>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>";
+    <div class="table-wrapper">
+        <?php
+        if ($result && $result->num_rows > 0) {
+            echo "<table>
+                    <thead>
+                        <tr>
+                            <th>
+                                <span class='lang-en'>Game Name</span>
+                                <span class='lang-th' style='display: none;'>ชื่อเกม</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Category</span>
+                                <span class='lang-th' style='display: none;'>หมวดหมู่</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Stock Quantity</span>
+                                <span class='lang-th' style='display: none;'>จำนวนคงเหลือ</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Platform</span>
+                                <span class='lang-th' style='display: none;'>แพลตฟอร์ม</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Developer</span>
+                                <span class='lang-th' style='display: none;'>ผู้พัฒนา</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Release Date</span>
+                                <span class='lang-th' style='display: none;'>วันที่วางจำหน่าย</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Score</span>
+                                <span class='lang-th' style='display: none;'>คะแนน</span>
+                            </th>
+                            <th>
+                                <span class='lang-en'>Status</span>
+                                <span class='lang-th' style='display: none;'>สถานะ</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>";
 
-                    while ($row = $result->fetch_assoc()) {
-                        // ตรวจสอบ StockQuantity ต่ำกว่า 3 เพื่อตั้ง class low-stock
-                        $rowClass = ($row['StockQuantity'] < 3) ? "low-stock" : "";
-                        
-                        // จำกัดความยาวของ Description ให้อ่านง่ายในตาราง
-                        $shortDesc = substr($row['Description'], 0, 100);
-                        if (strlen($row['Description']) > 100) {
-                            $shortDesc .= '...';
-                        }
-                        
-                        echo "<tr class='{$rowClass}'>
-                                <td>{$row['GameID']}</td>
-                                <td>{$row['GameName']}</td>
-                                <td>{$row['StockQuantity']}</td>
-                                <td>{$row['Category']}</td>
-                                <td>{$row['ReleaseDate']}</td>
-                                <td>{$row['Score']}</td>
-                                <td>{$row['Developer']}</td>
-                                <td>{$row['Platform']}</td>
-                                <td>{$row['LastUpdate']}</td>
-                                <td><img src='{$row['GameImage']}' alt='{$row['GameName']}'></td>
-                            </tr>";
-                    }
-                    echo "</tbody></table>";
-                } else {
-                    echo "<div class='empty-state'>
-                            <div class='empty-icon'>🎮</div>
-                            <h3>
-                                <span class='lang-en'>No Game Data Available</span>
-                                <span class='lang-th' style='display: none;'>ไม่มีข้อมูลเกมที่พร้อมใช้งาน</span>
-                            </h3>
-                            <p>
-                                <span class='lang-en'>There are no games in the database.</span>
-                                <span class='lang-th' style='display: none;'>ไม่มีเกมในฐานข้อมูล</span>
-                            </p>
-                          </div>";
-                }
-                ?>
-            </div>
-        </div>
+            while ($row = $result->fetch_assoc()) {
+                // ตรวจสอบ StockQuantity ต่ำกว่า 3 เพื่อตั้ง class low-stock
+                $rowClass = ($row['StockQuantity'] < 3) ? "low-stock" : "";
+                $status = $row['status'] === 'sold' ? ($current_lang === 'th' ? 'ขายแล้ว' : 'Sold') : ($current_lang === 'th' ? 'พร้อมขาย' : 'Available');
+
+                echo "<tr class='{$rowClass}'>
+                        <td>" . htmlspecialchars($row['GameName'], ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . htmlspecialchars($row['Category'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . htmlspecialchars($row['StockQuantity'], ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . htmlspecialchars($row['Platform'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . htmlspecialchars($row['Developer'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . htmlspecialchars($row['ReleaseDate'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . htmlspecialchars($row['Score'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>
+                        <td>" . $status . "</td>
+                    </tr>";
+            }
+            echo "</tbody></table>";
+        } else {
+            echo "<div class='empty-state'>
+                    <div class='empty-icon'>🎮</div>
+                    <h3>
+                        <span class='lang-en' " . ($current_lang === 'th' ? 'style="display: none;"' : '') . ">No Game Data Available</span>
+                        <span class='lang-th' " . ($current_lang === 'en' ? 'style="display: none;"' : '') . ">ไม่มีข้อมูลเกมที่พร้อมใช้งาน</span>
+                    </h3>
+                    <p>
+                        <span class='lang-en' " . ($current_lang === 'th' ? 'style="display: none;"' : '') . ">There are no games in the database.</span>
+                        <span class='lang-th' " . ($current_lang === 'en' ? 'style="display: none;"' : '') . ">ไม่มีเกมในฐานข้อมูล</span>
+                    </p>
+                  </div>";
+        }
+        ?>
+    </div>
+</div>
         
         <div class="action-buttons">
-            <form action="generate_report.php" method="post">
-                <button type="submit" class="btn btn-danger">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    <span class="lang-en">Download PDF Report</span>
-                    <span class="lang-th" style="display: none;">ดาวน์โหลดรายงาน PDF</span>
-                </button>
-            </form>
+            <!-- ปุ่มเลือกภาษาก่อนดาวน์โหลด -->
+            <a href="generate_report.php?report_lang=en" class="btn btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Download PDF (EN)</span>
+            </a>
+            <a href="generate_report.php?report_lang=th" class="btn btn-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>ดาวน์โหลด PDF (TH)</span>
+            </a>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Language Toggle Functionality
-            const langToggle = document.getElementById('langToggle');
-            const currentLang = document.querySelector('.current-lang');
-            const body = document.body;
-            
-            langToggle.addEventListener('click', function() {
-                if (body.classList.contains('thai')) {
-                    // Switch to English
-                    body.classList.remove('thai');
-                    currentLang.textContent = 'EN';
-                    
-                    // Hide Thai elements, show English elements
-                    document.querySelectorAll('.lang-th').forEach(el => {
-                        el.style.display = 'none';
-                    });
-                    document.querySelectorAll('.lang-en').forEach(el => {
-                        el.style.display = 'inline-block';
-                    });
-                } else {
-                    // Switch to Thai
-                    body.classList.add('thai');
-                    currentLang.textContent = 'TH';
-                    
-                    // Hide English elements, show Thai elements
-                    document.querySelectorAll('.lang-en').forEach(el => {
-                        el.style.display = 'none';
-                    });
-                    document.querySelectorAll('.lang-th').forEach(el => {
-                        el.style.display = 'inline-block';
-                    });
-                }
-            });
-            
             // Navbar scroll effect
             window.addEventListener('scroll', function() {
                 const navbar = document.querySelector('.navbar');
@@ -1176,7 +1149,6 @@ if ($result === false) {
             // Enhanced Low Stock Animation
             const lowStockRows = document.querySelectorAll('tr.low-stock');
             lowStockRows.forEach(row => {
-                // Add pulsing border effect
                 setInterval(() => {
                     row.style.boxShadow = '0 0 15px rgba(239, 71, 111, 0.7)';
                     setTimeout(() => {
