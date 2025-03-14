@@ -805,6 +805,119 @@ mysqli_close($conn);
         .hover-scale:hover {
             transform: scale(1.05);
         }
+        .suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 0 0 16px 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 0 0 16px 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.suggestion-item {
+    padding: 10px 20px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.suggestion-item:hover {
+    background: rgba(67, 97, 238, 0.5);
+}
+.tooltip-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: help;
+    padding: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: color 0.3s ease;
+    z-index: 1001; /* เพิ่ม z-index ให้สูงมาก */
+}
+
+.tooltip-icon:hover {
+    color: white;
+}
+
+.tooltip {
+    position: absolute;
+    top: calc(100% + 5px); /* ปรับระยะห่างจากช่อง */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    z-index: 1000; /* อยู่บนสุด */
+    max-width: 250px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    display: none;
+    white-space: normal;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+    z-index: 1000; /* ต้องเท่ากับ tooltip */
+}
+
+/* ปรับ z-index ขององค์ประกอบอื่นให้ต่ำกว่า */
+.input-group {
+    position: relative;
+    margin-bottom: 1rem;
+    perspective: 1000px;
+    z-index: 10; /* ต่ำกว่า tooltip */
+}
+
+.suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 0 0 16px 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 15; /* ต่ำกว่า tooltip แต่สูงกว่า input */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+
+
     </style>
 </head>
 <body>
@@ -882,6 +995,18 @@ mysqli_close($conn);
 
         <div class="form-body">
     <form method="POST" action="" class="form-grid" enctype="multipart/form-data">
+        <!-- ช่อง Prompt ใหม่กับไอคอน tooltips -->
+        <div class="input-group">
+            <input type="text" id="gamePrompt" placeholder=" " autocomplete="off">
+            <label for="gamePrompt">
+                <span class="lang-en">Prompt Search</span>
+                <span class="lang-th" style="display: none;">ค้นหาด้วยคำแนะนำ</span>
+            </label>
+            <span class="tooltip-icon" id="tooltipIcon">i</span>
+            <div id="promptTooltip" class="tooltip" style="display: none;"></div>
+            <div id="promptSuggestions" class="suggestions" style="display: none;"></div>
+        </div>
+
         <div class="input-group">
             <input type="text" id="gameName" name="gameName" placeholder=" " required>
             <label for="gameName">
@@ -954,80 +1079,144 @@ mysqli_close($conn);
     </form>
 </div>
 
-    <script>
-        // Language Toggle Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const langToggle = document.getElementById('langToggle');
-            const currentLang = document.querySelector('.current-lang');
-            const body = document.body;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const langToggle = document.getElementById('langToggle');
+    const currentLang = document.querySelector('.current-lang');
+    const body = document.body;
+    
+    langToggle.addEventListener('click', function() {
+        if (body.classList.contains('thai')) {
+            body.classList.remove('thai');
+            currentLang.textContent = 'EN';
+            document.querySelectorAll('.lang-th').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'inline-block');
+        } else {
+            body.classList.add('thai');
+            currentLang.textContent = 'TH';
+            document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.lang-th').forEach(el => el.style.display = 'inline-block');
+        }
+    });
+    
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) navbar.classList.add('scrolled');
+        else navbar.classList.remove('scrolled');
+    });
+    
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => input.parentElement.classList.add('focused'));
+        input.addEventListener('blur', () => input.parentElement.classList.remove('focused'));
+    });
+    
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+    
+    mobileMenuBtn.addEventListener('click', function() {
+        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+    });
+    
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) navLinks.style.display = 'flex';
+        else navLinks.style.display = 'none';
+    });
+
+    // ข้อมูลเกมที่กำหนดล่วงหน้า
+    const gameData = [
+        {
+            GameName: "Call of Duty",
+            Category: "FPS",
+            ReleaseDate: "2023-11-10",
+            Score: "8.5",
+            Description: "A fast-paced first-person shooter with intense multiplayer action.",
+            Developer: "Activision",
+            Platform: "PC, PS5, Xbox"
+        },
+        {
+            GameName: "FIFA 23",
+            Category: "Sports",
+            ReleaseDate: "2022-09-30",
+            Score: "7.8",
+            Description: "The latest installment in the FIFA series with updated teams and gameplay.",
+            Developer: "EA Sports",
+            Platform: "PC, PS4, PS5, Xbox"
+        },
+        {
+            GameName: "The Witcher 3",
+            Category: "RPG",
+            ReleaseDate: "2015-05-19",
+            Score: "9.3",
+            Description: "An open-world RPG with a rich story and expansive world.",
+            Developer: "CD Projekt",
+            Platform: "PC, PS4, Xbox One, Switch"
+        }
+    ];
+
+    // Autocomplete functionality สำหรับช่อง Prompt
+    const gamePromptInput = document.getElementById('gamePrompt');
+    const promptSuggestions = document.getElementById('promptSuggestions');
+    const tooltipIcon = document.getElementById('tooltipIcon');
+    const tooltip = document.getElementById('promptTooltip');
+    
+    gamePromptInput.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        if (query.length < 2) {
+            promptSuggestions.style.display = 'none';
+            return;
+        }
+        
+        const matches = gameData.filter(game => game.GameName.toLowerCase().includes(query));
+        
+        promptSuggestions.innerHTML = '';
+        if (matches.length === 0) {
+            promptSuggestions.style.display = 'none';
+            return;
+        }
+        
+        promptSuggestions.style.display = 'block';
+        matches.forEach(game => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.classList.add('suggestion-item');
+            suggestionItem.textContent = game.GameName;
             
-            langToggle.addEventListener('click', function() {
-                if (body.classList.contains('thai')) {
-                    // Switch to English
-                    body.classList.remove('thai');
-                    currentLang.textContent = 'EN';
-                    
-                    // Hide Thai elements, show English elements
-                    document.querySelectorAll('.lang-th').forEach(el => {
-                        el.style.display = 'none';
-                    });
-                    document.querySelectorAll('.lang-en').forEach(el => {
-                        el.style.display = 'inline-block';
-                    });
-                } else {
-                    // Switch to Thai
-                    body.classList.add('thai');
-                    currentLang.textContent = 'TH';
-                    
-                    // Hide English elements, show Thai elements
-                    document.querySelectorAll('.lang-en').forEach(el => {
-                        el.style.display = 'none';
-                    });
-                    document.querySelectorAll('.lang-th').forEach(el => {
-                        el.style.display = 'inline-block';
-                    });
-                }
+            suggestionItem.addEventListener('click', function() {
+                document.getElementById('gameName').value = game.GameName || '';
+                document.getElementById('category').value = game.Category || '';
+                document.getElementById('developer').value = game.Developer || '';
+                document.getElementById('platform').value = game.Platform || '';
+                document.getElementById('releaseDate').value = game.ReleaseDate || '';
+                document.getElementById('score').value = game.Score || '';
+                document.getElementById('description').value = game.Description || '';
+                promptSuggestions.style.display = 'none';
+                gamePromptInput.value = '';
             });
             
-            // Navbar scroll effect
-            window.addEventListener('scroll', function() {
-                const navbar = document.querySelector('.navbar');
-                if (window.scrollY > 50) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-            });
-            
-            // Form input animation
-            const inputs = document.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                input.addEventListener('focus', () => {
-                    input.parentElement.classList.add('focused');
-                });
-                
-                input.addEventListener('blur', () => {
-                    input.parentElement.classList.remove('focused');
-                });
-            });
-            
-            // Mobile menu functionality
-            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-            const navLinks = document.querySelector('.nav-links');
-            
-            mobileMenuBtn.addEventListener('click', function() {
-                navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-            });
-            
-            // Adjust for screen size changes
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    navLinks.style.display = 'flex';
-                } else {
-                    navLinks.style.display = 'none';
-                }
-            });
+            promptSuggestions.appendChild(suggestionItem);
         });
-    </script>
+    });
+
+    // Tooltips functionality
+    tooltipIcon.addEventListener('mouseover', function() {
+        const promptList = gameData.map(game => game.GameName).join(', ');
+        tooltip.textContent = `Prompts: ${promptList}`;
+        tooltip.style.display = 'block';
+    });
+
+    tooltipIcon.addEventListener('mouseout', function() {
+        tooltip.style.display = 'none';
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!gamePromptInput.contains(e.target) && !promptSuggestions.contains(e.target)) {
+            promptSuggestions.style.display = 'none';
+        }
+        if (!tooltipIcon.contains(e.target)) {
+            tooltip.style.display = 'none';
+        }
+    });
+});
+</script>
 </body>
 </html>
