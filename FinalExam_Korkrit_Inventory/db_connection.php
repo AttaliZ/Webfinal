@@ -1,9 +1,9 @@
 <?php	 	
 
-$servername = getenv('DB_SERVER') ?: '158.108.101.153';
-$username = getenv('DB_USERNAME') ?: 'std6630202040';
-$password = getenv('DB_PASSWORD') ?: 'nZ!4pQrt';
-$dbname = getenv('DB_NAME') ?: 'it_std6630202040';
+$servername = getenv('DB_SERVER') ?: '**************';
+$username = getenv('DB_USERNAME') ?: '***********';
+$password = getenv('DB_PASSWORD') ?: '*********';
+$dbname = getenv('DB_NAME') ?: '********';
 
 $conn = mysqli_connect($servername, $username, $password, $dbname);
 
